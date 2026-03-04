@@ -1,0 +1,98 @@
+{
+  "projectType": "saas",
+  "projectName": "BioTea",
+  "projectDescription": "A mobile application built with Expo and React Native featuring user authentication, secure data storage, and settings management.",
+  "theme": "almond",
+  "primaryColor": "#7c7c7c",
+  "lightColor": "#0a0a0a",
+  "darkColor": "#c9c9c9",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "introduction",
+              "quickstart",
+              "installation"
+            ]
+          },
+          {
+            "group": "Core Features",
+            "pages": [
+              "features/authentication",
+              "features/user-management",
+              "features/secure-storage",
+              "features/navigation"
+            ]
+          },
+          {
+            "group": "Architecture",
+            "pages": [
+              "architecture/overview",
+              "architecture/file-structure",
+              "architecture/routing"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Development",
+        "groups": [
+          {
+            "group": "Setup",
+            "pages": [
+              "development/environment",
+              "development/running-the-app",
+              "development/testing"
+            ]
+          },
+          {
+            "group": "Components",
+            "pages": [
+              "components/overview",
+              "components/themed-components",
+              "components/ui-elements"
+            ]
+          },
+          {
+            "group": "Context & State",
+            "pages": [
+              "context/user-context",
+              "context/secure-store-context"
+            ]
+          },
+          {
+            "group": "API Integration",
+            "pages": [
+              "api/endpoints",
+              "api/authentication-flow"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "User authentication with login and registration",
+    "Secure data storage using Expo SecureStore",
+    "Tab-based navigation with Home and Settings",
+    "Context-based state management for user data",
+    "API integration for backend services",
+    "Themed components with light/dark mode support"
+  ],
+  "publicApiSurface": [
+    "UserContext - User state management",
+    "SecureStoreContext - Secure data storage operations",
+    "useUser() - Hook to access user context",
+    "useSecureStore() - Hook to access secure storage",
+    "ThemedText - Themed text component",
+    "ThemedView - Themed view component",
+    "Login screen - /login route",
+    "Register screen - /register route",
+    "Home tab - /(tabs)/(home)/inic route",
+    "Settings tab - /(tabs)/(settings) routes"
+  ]
+}
