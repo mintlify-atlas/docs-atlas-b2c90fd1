@@ -1,0 +1,198 @@
+---
+title: 'Components Overview'
+description: 'Complete guide to BioTea UI components and context providers'
+---
+
+# Components Overview
+
+BioTea's component library is built on React Native and Expo, providing a themed UI system with authentication and secure storage capabilities.
+
+## Component Categories
+
+<Tabs>
+  <Tab title="Themed Components">
+    Core components that automatically adapt to light and dark modes using the `useThemeColor` hook.
+    
+    - **ThemedText** - Styled text component with typography variants
+    - **ThemedView** - Container component with theme-aware background colors
+  </Tab>
+  
+  <Tab title="UI Components">
+    Interactive and animated UI elements for enhanced user experience.
+    
+    - **Collapsible** - Expandable/collapsible content section
+    - **ParallaxScrollView** - Animated scroll view with parallax header
+    - **ExternalLink** - Cross-platform external link handler
+    - **HelloWave** - Animated waving hand emoji
+  </Tab>
+  
+  <Tab title="Navigation">
+    Tab bar and navigation-related components.
+    
+    - **TabBarIcon** - Icon component for bottom tab navigation
+  </Tab>
+  
+  <Tab title="Context Providers">
+    Application-wide state management and secure storage.
+    
+    - **SecureStoreContext** - Expo SecureStore wrapper for encrypted data
+    - **UserContext** - User authentication state management
+  </Tab>
+</Tabs>
+
+## All Components
+
+### Themed Components
+
+#### ThemedText
+Theme-aware text component with predefined typography styles.
+
+```tsx
+import { ThemedText } from '@/components/ThemedText';
+
+<ThemedText type="title">Welcome to BioTea</ThemedText>
+<ThemedText type="subtitle">Your health companion</ThemedText>
+<ThemedText>Regular body text</ThemedText>
+```
+
+**Location:** `components/ThemedText.tsx`
+
+#### ThemedView
+Theme-aware container component that adapts background color to current theme.
+
+```tsx
+import { ThemedView } from '@/components/ThemedView';
+
+<ThemedView style={{ padding: 20 }}>
+  <ThemedText>Content here</ThemedText>
+</ThemedView>
+```
+
+**Location:** `components/ThemedView.tsx`
+
+### UI Components
+
+#### Collapsible
+Expandable content section with chevron indicator.
+
+```tsx
+import { Collapsible } from '@/components/Collapsible';
+
+<Collapsible title="More Information">
+  <ThemedText>Hidden content goes here</ThemedText>
+</Collapsible>
+```
+
+**Location:** `components/Collapsible.tsx`
+
+#### ParallaxScrollView
+Animated scroll view with parallax effect on header image.
+
+```tsx
+import ParallaxScrollView from '@/components/ParallaxScrollView';
+
+<ParallaxScrollView
+  headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
+  headerImage={<Image source={require('@/assets/images/header.png')} />}
+>
+  <ThemedText>Scrollable content</ThemedText>
+</ParallaxScrollView>
+```
+
+**Location:** `components/ParallaxScrollView.tsx`
+
+#### ExternalLink
+Cross-platform link component that opens external URLs in in-app browser on native platforms.
+
+```tsx
+import { ExternalLink } from '@/components/ExternalLink';
+
+<ExternalLink href="https://example.com">
+  <ThemedText type="link">Visit Website</ThemedText>
+</ExternalLink>
+```
+
+**Location:** `components/ExternalLink.tsx`
+
+#### HelloWave
+Animated emoji component with waving animation.
+
+```tsx
+import { HelloWave } from '@/components/HelloWave';
+
+<HelloWave />
+```
+
+**Location:** `components/HelloWave.tsx`
+
+### Navigation Components
+
+#### TabBarIcon
+Icon component for bottom tab navigation using Ionicons.
+
+```tsx
+import { TabBarIcon } from '@/components/navigation/TabBarIcon';
+
+<TabBarIcon name="home" color="#0a7ea4" />
+```
+
+**Location:** `components/navigation/TabBarIcon.tsx`
+
+### Context Providers
+
+#### SecureStoreContext
+Provides secure storage functionality using Expo's SecureStore for sensitive data like tokens.
+
+```tsx
+import { SecureStoreProvider, useSecureStore } from '@/components/SecureStoreContext';
+
+// In your app root
+<SecureStoreProvider>
+  <App />
+</SecureStoreProvider>
+
+// In your components
+const { saveSecureData, loadSecureData, deleteSecureData } = useSecureStore();
+await saveSecureData('authToken', token);
+```
+
+**Location:** `components/SecureStoreContext.tsx`
+
+#### UserContext
+Manages user authentication state throughout the application.
+
+```tsx
+import { UserProvider, useUser } from '@/components/UserContext';
+
+// In your app root
+<UserProvider>
+  <App />
+</UserProvider>
+
+// In your components
+const { user, setUser } = useUser();
+```
+
+**Location:** `components/UserContext.tsx`
+
+## Import Patterns
+
+All components use the `@/` alias for imports:
+
+```tsx
+import { ThemedText } from '@/components/ThemedText';
+import { ThemedView } from '@/components/ThemedView';
+import { useThemeColor } from '@/hooks/useThemeColor';
+import { Colors } from '@/constants/Colors';
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Themed Components" icon="palette" href="/components/themed-components">
+    Learn about ThemedText and ThemedView
+  </Card>
+  <Card title="UI Elements" icon="shapes" href="/components/ui-elements">
+    Explore interactive UI components
+  </Card>
+</CardGroup>

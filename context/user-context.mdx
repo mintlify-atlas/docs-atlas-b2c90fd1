@@ -1,0 +1,200 @@
+---
+title: "UserContext"
+description: "Global state management for user authentication and data in BioTea"
+---
+
+## Overview
+
+The `UserContext` provides a centralized state management solution for user authentication and user data throughout the BioTea application. It uses React Context API to make user information accessible across all components without prop drilling.
+
+## UserContext Interface
+
+The context exposes the following TypeScript interface:
+
+```typescript
+interface UserContextType {
+    user: any;
+    setUser: React.Dispatch<React.SetStateAction<any>>;
+}
+```
+
+<ResponseField name="user" type="any">
+  The current user object containing authentication data and user information. Returns `null` when no user is logged in.
+</ResponseField>
+
+<ResponseField name="setUser" type="React.Dispatch<React.SetStateAction<any>>">
+  State setter function to update the user object. Used during login, logout, and profile updates.
+</ResponseField>
+
+## UserProvider Component
+
+The `UserProvider` component wraps your application to provide user context to all child components.
+
+### Usage
+
+```tsx
+import { UserProvider } from './components/UserContext';
+
+export default function App() {
+  return (
+    <UserProvider>
+      {/* Your app components */}
+    </UserProvider>
+  );
+}
+```
+
+### Implementation
+
+```typescript
+export function UserProvider({ children }: { children: ReactNode }) {
+    const [user, setUser] = useState<any>(null);
+
+    return (
+        <UserContext.Provider value={{ user, setUser }}>
+            {children}
+        </UserContext.Provider>
+    );
+}
+```
+
+<ParamField path="children" type="ReactNode" required>
+  React components that need access to user context
+</ParamField>
+
+## useUser Hook
+
+The `useUser` hook provides access to the user context from any component within the `UserProvider`.
+
+### Syntax
+
+```typescript
+const { user, setUser } = useUser();
+```
+
+### Return Value
+
+<ResponseField name="user" type="any">
+  Current user data object or `null` if not authenticated
+</ResponseField>
+
+<ResponseField name="setUser" type="function">
+  Function to update the user state
+</ResponseField>
+
+### Error Handling
+
+<Note>
+  The `useUser` hook will throw an error if used outside of a `UserProvider`. Always ensure your components are wrapped with `UserProvider`.
+</Note>
+
+```typescript
+if (context === undefined) {
+    throw new Error("useUser must be used within a UserProvider");
+}
+```
+
+## Practical Example: Login Flow
+
+Here's how the UserContext is used in the BioTea login screen (`app/login.tsx`):
+
+<Tabs>
+  <Tab title="Login Implementation">
+    ```tsx
+import { useUser } from '../components/UserContext';
+import { useSecureStore } from '../components/SecureStoreContext';
+
+export default function Login() {
+    const [username, setUsername] = useState('');
+    const [password, setPassword] = useState('');
+    const router = useRouter();
+
+    const { setUser } = useUser();
+    const { saveSecureData } = useSecureStore();
+
+    const handleLogin = async () => {
+        try {
+            const requestData = {
+                user: username,
+                pass: password,
+            };
+
+            const response = await axios.post(
+                `${apiEndpoints.dev}/login.php`,
+                requestData
+            );
+
+            if (!response.data.error) {
+                // Update user context with login data
+                setUser(response.data.data);
+                // Persist user data securely
+                await saveSecureData('user', response.data.data);
+                // Navigate to home screen
+                router.navigate('(tabs)/(home)/inic');
+            } else {
+                Alert.alert('Login failed', response.data.message);
+            }
+        } catch (error) {
+            Alert.alert('Error', 'Login attempt failed');
+        }
+    };
+}
+    ```
+  </Tab>
+  <Tab title="Accessing User Data">
+    ```tsx
+import { useUser } from '../components/UserContext';
+
+export function ProfileScreen() {
+    const { user } = useUser();
+
+    if (!user) {
+        return <Text>Please log in</Text>;
+    }
+
+    return (
+        <View>
+            <Text>Welcome, {user.name}</Text>
+            {/* Display user information */}
+        </View>
+    );
+}
+    ```
+  </Tab>
+  <Tab title="Logout Implementation">
+    ```tsx
+import { useUser } from '../components/UserContext';
+import { useSecureStore } from '../components/SecureStoreContext';
+
+export function LogoutButton() {
+    const { setUser } = useUser();
+    const { deleteSecureData } = useSecureStore();
+    const router = useRouter();
+
+    const handleLogout = async () => {
+        // Clear user context
+        setUser(null);
+        // Remove persisted user data
+        await deleteSecureData('user');
+        // Navigate to login
+        router.navigate('/login');
+    };
+
+    return (
+        <TouchableOpacity onPress={handleLogout}>
+            <Text>Logout</Text>
+        </TouchableOpacity>
+    );
+}
+    ```
+  </Tab>
+</Tabs>
+
+## Source Code Location
+
+`/workspace/source/components/UserContext.tsx:1-27`
+
+## Related
+
+- [SecureStoreContext](/context/secure-store-context) - Securely persist user data
+- Authentication Flow - Learn about the complete authentication process

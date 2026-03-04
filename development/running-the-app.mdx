@@ -1,0 +1,377 @@
+---
+title: Running the App
+description: Learn how to run the BioTea application on different platforms and devices
+---
+
+BioTea can run on iOS, Android, and web platforms using Expo's development server. This guide covers all available methods for running and debugging the app.
+
+## Starting the Development Server
+
+The development server uses Metro bundler to compile and serve your application code.
+
+### Basic Start Command
+
+```bash
+npm start
+```
+
+This starts the Expo development server and displays a QR code in your terminal. You'll see an interactive menu with options:
+
+- Press `a` - Open on Android emulator/device
+- Press `i` - Open on iOS simulator
+- Press `w` - Open in web browser
+- Press `r` - Reload the app
+- Press `m` - Toggle menu
+- Press `c` - Clear Metro bundler cache
+
+<Tip>
+  The development server runs on `http://localhost:8081` by default and automatically reloads when you save changes to your code.
+</Tip>
+
+## Platform-Specific Commands
+
+BioTea provides dedicated npm scripts for each platform defined in `package.json`:
+
+<CodeGroup>
+```bash Android
+npm run android
+```
+
+```bash iOS
+npm run ios
+```
+
+```bash Web
+npm run web
+```
+</CodeGroup>
+
+These commands start the development server and automatically launch the app on the respective platform.
+
+## Running on Android
+
+### Using an Emulator
+
+<Steps>
+  <Step title="Start the Android Emulator">
+    Open Android Studio and launch your AVD (Android Virtual Device) from the Device Manager, or use the command line:
+    
+    ```bash
+    # List available emulators
+    emulator -list-avds
+    
+    # Start a specific emulator
+    emulator -avd Pixel_5_API_33
+    ```
+  </Step>
+
+  <Step title="Run the App">
+    ```bash
+    npm run android
+    ```
+    
+    Expo will detect the running emulator and install the app automatically.
+  </Step>
+</Steps>
+
+### Using a Physical Device
+
+<Steps>
+  <Step title="Enable Developer Options">
+    On your Android device:
+    1. Go to **Settings > About Phone**
+    2. Tap **Build Number** 7 times
+    3. Go back to **Settings > Developer Options**
+    4. Enable **USB Debugging**
+  </Step>
+
+  <Step title="Connect Your Device">
+    Connect your device via USB and verify the connection:
+    
+    ```bash
+    adb devices
+    ```
+    
+    You should see your device listed.
+  </Step>
+
+  <Step title="Run the App">
+    ```bash
+    npm run android
+    ```
+  </Step>
+</Steps>
+
+<Note>
+  Ensure your device and development machine are on the same Wi-Fi network for hot reloading to work properly.
+</Note>
+
+## Running on iOS
+
+<Warning>
+  iOS development requires macOS with Xcode installed. You cannot build iOS apps on Windows or Linux.
+</Warning>
+
+### Using iOS Simulator
+
+<Steps>
+  <Step title="Open iOS Simulator (Optional)">
+    The `npm run ios` command will automatically launch the simulator, but you can also start it manually:
+    
+    ```bash
+    open -a Simulator
+    ```
+  </Step>
+
+  <Step title="Run the App">
+    ```bash
+    npm run ios
+    ```
+    
+    This builds the app and launches it in the iOS Simulator.
+  </Step>
+</Steps>
+
+### Using a Physical Device
+
+<Steps>
+  <Step title="Install Expo Go">
+    Download [Expo Go](https://apps.apple.com/app/expo-go/id982107779) from the App Store on your iOS device.
+  </Step>
+
+  <Step title="Start the Development Server">
+    ```bash
+    npm start
+    ```
+  </Step>
+
+  <Step title="Scan the QR Code">
+    1. Open Expo Go on your device
+    2. Tap **Scan QR Code**
+    3. Scan the QR code from your terminal
+    
+    The app will load automatically.
+  </Step>
+</Steps>
+
+<Note>
+  Both your development machine and iOS device must be on the same network.
+</Note>
+
+## Running on Web
+
+BioTea uses Metro bundler with web support configured in `app.json`:
+
+```bash
+npm run web
+```
+
+This opens the app in your default browser at `http://localhost:8081`.
+
+<Tip>
+  Web mode is useful for rapid UI development and testing responsive layouts without needing a mobile device or emulator.
+</Tip>
+
+## Hot Reload and Fast Refresh
+
+BioTea supports **Fast Refresh** for instant feedback during development.
+
+### How It Works
+
+- **Fast Refresh** - Automatically reloads components when you save files
+- Preserves component state during most edits
+- Works for functional components and hooks
+- Resets state for syntax errors or runtime errors
+
+### Manual Reload
+
+If Fast Refresh doesn't work or you need a full reload:
+
+<CodeGroup>
+```bash Terminal
+# Press 'r' in the terminal where npm start is running
+r
+```
+
+```bash Device Shake Gesture
+# Shake your physical device or use:
+# - Android Emulator: Cmd+M (Mac) or Ctrl+M (Windows/Linux)
+# - iOS Simulator: Cmd+D (Mac)
+# Then select "Reload"
+```
+
+```bash Clear Cache
+# If you encounter persistent issues, clear the cache:
+npm start -- --clear
+```
+</CodeGroup>
+
+## Debugging
+
+### React DevTools
+
+BioTea supports React DevTools for inspecting component hierarchies:
+
+```bash
+npm install -g react-devtools
+react-devtools
+```
+
+Then reload your app to connect automatically.
+
+### Remote Debugging
+
+<Steps>
+  <Step title="Open Developer Menu">
+    - **iOS Simulator:** Press `Cmd+D`
+    - **Android Emulator:** Press `Cmd+M` (Mac) or `Ctrl+M` (Windows/Linux)
+    - **Physical Device:** Shake the device
+  </Step>
+
+  <Step title="Enable Remote Debugging">
+    Select **Debug Remote JS** from the menu. This opens a debugger in Chrome at `http://localhost:8081/debugger-ui`.
+  </Step>
+
+  <Step title="Inspect with Chrome DevTools">
+    Open Chrome DevTools (F12 or Cmd+Option+I) to:
+    - Set breakpoints
+    - Inspect network requests
+    - View console logs
+    - Profile performance
+  </Step>
+</Steps>
+
+### Logging
+
+Use `console.log()` statements in your code. Logs appear in:
+- The terminal where `npm start` is running
+- Chrome DevTools console (when remote debugging)
+- React Native Debugger
+
+<CodeGroup>
+```typescript Basic Logging
+console.log('User logged in:', user);
+console.warn('Deprecated API used');
+console.error('Authentication failed');
+```
+
+```typescript Structured Logging
+console.log('API Response:', {
+  status: response.status,
+  data: response.data,
+  timestamp: new Date().toISOString()
+});
+```
+</CodeGroup>
+
+### Network Inspection
+
+BioTea uses Axios for HTTP requests. To inspect network traffic:
+
+1. Enable remote debugging
+2. Open Chrome DevTools
+3. Go to the **Network** tab
+4. Reload the app to see all requests
+
+<Note>
+  For more advanced network debugging, consider installing [Reactotron](https://github.com/infinitered/reactotron) which provides a dedicated app for monitoring Redux state, API calls, and performance.
+</Note>
+
+## Development Tips
+
+### Clearing Cache
+
+If you experience unexpected behavior or stale data:
+
+```bash
+# Clear Metro bundler cache
+npm start -- --clear
+
+# Reset project (removes build artifacts)
+npm run reset-project
+
+# Full clean (nuclear option)
+rm -rf node_modules
+npm install
+npm start -- --clear
+```
+
+### Using Expo Go vs Development Builds
+
+BioTea uses native modules like `expo-secure-store`. For development:
+
+- **Expo Go** works with all modules used in BioTea
+- **Development builds** may be needed if you add custom native code
+
+<Warning>
+  If you modify native configuration or add native modules not supported by Expo Go, you'll need to create a [development build](https://docs.expo.dev/develop/development-builds/introduction/).
+</Warning>
+
+### Multiple Devices
+
+You can run BioTea on multiple devices simultaneously:
+
+```bash
+# Start the server once
+npm start
+
+# Connect multiple devices:
+# - Scan QR code on multiple physical devices
+# - Open in web browser
+# - Launch iOS simulator
+# All will connect to the same development server
+```
+
+### Port Conflicts
+
+If port 8081 is already in use:
+
+```bash
+# Find and kill the process using port 8081
+lsof -ti:8081 | xargs kill -9
+
+# Or start on a different port
+npm start -- --port 8082
+```
+
+## Troubleshooting
+
+### Common Issues
+
+**"Unable to resolve module" errors**
+```bash
+# Clear cache and restart
+rm -rf node_modules
+npm install
+npm start -- --clear
+```
+
+**App won't connect to development server**
+- Verify both device and computer are on the same network
+- Check firewall settings aren't blocking port 8081
+- Try connecting via tunnel: `npm start -- --tunnel`
+
+**Android app crashes on startup**
+```bash
+# View Android logs
+adb logcat | grep ReactNative
+```
+
+**iOS build fails**
+```bash
+# Clean iOS build
+cd ios
+rm -rf Pods Podfile.lock
+pod install
+cd ..
+npm run ios
+```
+
+**Changes not reflecting**
+- Press `r` to reload manually
+- Clear cache: `npm start -- --clear`
+- Check for syntax errors in the terminal
+
+## Next Steps
+
+Now that you can run BioTea, learn about [Testing](/development/testing) to ensure code quality and prevent regressions.

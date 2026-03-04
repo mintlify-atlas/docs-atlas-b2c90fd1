@@ -1,0 +1,569 @@
+---
+title: 'UI Elements'
+description: 'Interactive and animated UI components including Collapsible, ParallaxScrollView, and navigation elements'
+---
+
+# UI Elements
+
+BioTea includes a collection of interactive UI components with animations and platform-specific behaviors.
+
+---
+
+## Collapsible
+
+Expandable/collapsible content section with animated chevron indicator.
+
+<Accordion title="Full Source Code (components/Collapsible.tsx:1-42)">
+```typescript
+import Ionicons from '@expo/vector-icons/Ionicons';
+import { PropsWithChildren, useState } from 'react';
+import { StyleSheet, TouchableOpacity, useColorScheme } from 'react-native';
+import { ThemedText } from '@/components/ThemedText';
+import { ThemedView } from '@/components/ThemedView';
+import { Colors } from '@/constants/Colors';
+
+export function Collapsible({ children, title }: PropsWithChildren & { title: string }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const theme = useColorScheme() ?? 'light';
+
+  return (
+    <ThemedView>
+      <TouchableOpacity
+        style={styles.heading}
+        onPress={() => setIsOpen((value) => !value)}
+        activeOpacity={0.8}>
+        <Ionicons
+          name={isOpen ? 'chevron-down' : 'chevron-forward-outline'}
+          size={18}
+          color={theme === 'light' ? Colors.light.icon : Colors.dark.icon}
+        />
+        <ThemedText type="defaultSemiBold">{title}</ThemedText>
+      </TouchableOpacity>
+      {isOpen && <ThemedView style={styles.content}>{children}</ThemedView>}
+    </ThemedView>
+  );
+}
+
+const styles = StyleSheet.create({
+  heading: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  content: {
+    marginTop: 6,
+    marginLeft: 24,
+  },
+});
+```
+</Accordion>
+
+### Props
+
+<ParamField path="title" type="string" required>
+  The header text displayed in the collapsible button
+</ParamField>
+
+<ParamField path="children" type="ReactNode" required>
+  Content to show/hide when toggled
+</ParamField>
+
+### Features
+
+- Animated chevron icon that rotates when toggled
+- Theme-aware icon colors
+- Touch feedback with `activeOpacity={0.8}`
+- Starts in collapsed state by default
+- Indented content for visual hierarchy
+
+### Usage Examples
+
+#### Basic Usage
+
+```tsx
+import { Collapsible } from '@/components/Collapsible';
+import { ThemedText } from '@/components/ThemedText';
+
+<Collapsible title="More Information">
+  <ThemedText>
+    This content is hidden by default and appears when the user taps the header.
+  </ThemedText>
+</Collapsible>
+```
+
+#### FAQ Section
+
+```tsx
+<ThemedView>
+  <Collapsible title="What is BioTea?">
+    <ThemedText>
+      BioTea is a health tracking application that helps you monitor your wellness journey.
+    </ThemedText>
+  </Collapsible>
+  
+  <Collapsible title="How do I get started?">
+    <ThemedText>
+      Simply create an account and start logging your activities.
+    </ThemedText>
+  </Collapsible>
+  
+  <Collapsible title="Is my data secure?">
+    <ThemedText>
+      Yes, we use Expo SecureStore for encrypted local storage.
+    </ThemedText>
+  </Collapsible>
+</ThemedView>
+```
+
+#### With Rich Content
+
+```tsx
+<Collapsible title="Advanced Settings">
+  <ThemedText type="defaultSemiBold">Notifications</ThemedText>
+  <ThemedText>Enable push notifications for reminders</ThemedText>
+  
+  <ThemedText type="defaultSemiBold" style={{ marginTop: 10 }}>
+    Data Sync
+  </ThemedText>
+  <ThemedText>Automatically sync data every hour</ThemedText>
+</Collapsible>
+```
+
+---
+
+## ParallaxScrollView
+
+Animated scroll view with parallax effect on the header image.
+
+<Accordion title="Full Source Code (components/ParallaxScrollView.tsx:1-77)">
+```typescript
+import type { PropsWithChildren, ReactElement } from 'react';
+import { StyleSheet, useColorScheme } from 'react-native';
+import Animated, {
+  interpolate,
+  useAnimatedRef,
+  useAnimatedStyle,
+  useScrollViewOffset,
+} from 'react-native-reanimated';
+import { ThemedView } from '@/components/ThemedView';
+
+const HEADER_HEIGHT = 250;
+
+type Props = PropsWithChildren<{
+  headerImage: ReactElement;
+  headerBackgroundColor: { dark: string; light: string };
+}>;
+
+export default function ParallaxScrollView({
+  children,
+  headerImage,
+  headerBackgroundColor,
+}: Props) {
+  const colorScheme = useColorScheme() ?? 'light';
+  const scrollRef = useAnimatedRef<Animated.ScrollView>();
+  const scrollOffset = useScrollViewOffset(scrollRef);
+
+  const headerAnimatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [
+        {
+          translateY: interpolate(
+            scrollOffset.value,
+            [-HEADER_HEIGHT, 0, HEADER_HEIGHT],
+            [-HEADER_HEIGHT / 2, 0, HEADER_HEIGHT * 0.75]
+          ),
+        },
+        {
+          scale: interpolate(scrollOffset.value, [-HEADER_HEIGHT, 0, HEADER_HEIGHT], [2, 1, 1]),
+        },
+      ],
+    };
+  });
+
+  return (
+    <ThemedView style={styles.container}>
+      <Animated.ScrollView ref={scrollRef} scrollEventThrottle={16}>
+        <Animated.View
+          style={[
+            styles.header,
+            { backgroundColor: headerBackgroundColor[colorScheme] },
+            headerAnimatedStyle,
+          ]}>
+          {headerImage}
+        </Animated.View>
+        <ThemedView style={styles.content}>{children}</ThemedView>
+      </Animated.ScrollView>
+    </ThemedView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  header: {
+    height: 250,
+    overflow: 'hidden',
+  },
+  content: {
+    flex: 1,
+    padding: 32,
+    gap: 16,
+    overflow: 'hidden',
+  },
+});
+```
+</Accordion>
+
+### Props
+
+<ParamField path="headerImage" type="ReactElement" required>
+  The image or component to display in the parallax header (typically an `<Image>` component)
+</ParamField>
+
+<ParamField path="headerBackgroundColor" type="{ light: string; dark: string }" required>
+  Background colors for the header in light and dark modes
+</ParamField>
+
+<ParamField path="children" type="ReactNode" required>
+  Scrollable content to display below the header
+</ParamField>
+
+### Animation Details
+
+| Scroll Direction | Transform Effect |
+|-----------------|------------------|
+| Scroll up (pull down) | Header scales up 2x and moves up slower than scroll |
+| Normal scroll | Header moves with scroll |
+| Scroll down | Header moves down slower (0.75x speed) creating parallax |
+
+**Constants:**
+- `HEADER_HEIGHT`: 250px
+- `scrollEventThrottle`: 16ms for smooth 60fps animations
+- Content padding: 32px with 16px gap between children
+
+### Usage Examples
+
+#### Basic Usage
+
+```tsx
+import ParallaxScrollView from '@/components/ParallaxScrollView';
+import { Image } from 'react-native';
+import { ThemedText } from '@/components/ThemedText';
+
+<ParallaxScrollView
+  headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
+  headerImage={
+    <Image
+      source={require('@/assets/images/hero.png')}
+      style={{ width: '100%', height: 250 }}
+    />
+  }
+>
+  <ThemedText type="title">Welcome</ThemedText>
+  <ThemedText>Your scrollable content here...</ThemedText>
+</ParallaxScrollView>
+```
+
+#### With Custom Header Content
+
+```tsx
+<ParallaxScrollView
+  headerBackgroundColor={{ light: '#D0E8F2', dark: '#1A3A4A' }}
+  headerImage={
+    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+      <Image source={require('@/assets/logo.png')} />
+      <Text style={{ color: 'white', fontSize: 24 }}>BioTea</Text>
+    </View>
+  }
+>
+  <ThemedText type="subtitle">Dashboard</ThemedText>
+  {/* Dashboard content */}
+</ParallaxScrollView>
+```
+
+---
+
+## ExternalLink
+
+Cross-platform external link component that opens URLs in an in-app browser on native platforms.
+
+<Accordion title="Full Source Code (components/ExternalLink.tsx:1-25)">
+```typescript
+import { Link } from 'expo-router';
+import { openBrowserAsync } from 'expo-web-browser';
+import { type ComponentProps } from 'react';
+import { Platform } from 'react-native';
+
+type Props = Omit<ComponentProps<typeof Link>, 'href'> & { href: string };
+
+export function ExternalLink({ href, ...rest }: Props) {
+  return (
+    <Link
+      target="_blank"
+      {...rest}
+      href={href}
+      onPress={async (event) => {
+        if (Platform.OS !== 'web') {
+          // Prevent the default behavior of linking to the default browser on native.
+          event.preventDefault();
+          // Open the link in an in-app browser.
+          await openBrowserAsync(href);
+        }
+      }}
+    />
+  );
+}
+```
+</Accordion>
+
+### Props
+
+<ParamField path="href" type="string" required>
+  The external URL to open
+</ParamField>
+
+<ParamField path="...LinkProps" type="ComponentProps<typeof Link>">
+  All Expo Router Link props except `href` (children, style, etc.)
+</ParamField>
+
+### Platform Behavior
+
+<Tabs>
+  <Tab title="Web">
+    Opens link in new browser tab using `target="_blank"`
+  </Tab>
+  
+  <Tab title="iOS/Android">
+    Opens link in in-app browser using `expo-web-browser`
+    
+    - Prevents opening external browser app
+    - Keeps user in the app context
+    - Provides back navigation
+  </Tab>
+</Tabs>
+
+### Usage Examples
+
+#### Basic Link
+
+```tsx
+import { ExternalLink } from '@/components/ExternalLink';
+import { ThemedText } from '@/components/ThemedText';
+
+<ExternalLink href="https://example.com">
+  <ThemedText type="link">Visit our website</ThemedText>
+</ExternalLink>
+```
+
+#### Documentation Link
+
+```tsx
+<ThemedText>
+  For more information, see the{' '}
+  <ExternalLink href="https://docs.biotea.app">
+    <ThemedText type="link">documentation</ThemedText>
+  </ExternalLink>
+</ThemedText>
+```
+
+---
+
+## HelloWave
+
+Animated emoji component displaying a waving hand with repeated animation.
+
+<Accordion title="Full Source Code (components/HelloWave.tsx:1-38)">
+```typescript
+import { StyleSheet } from 'react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  withRepeat,
+  withSequence,
+} from 'react-native-reanimated';
+import { ThemedText } from '@/components/ThemedText';
+
+export function HelloWave() {
+  const rotationAnimation = useSharedValue(0);
+
+  rotationAnimation.value = withRepeat(
+    withSequence(withTiming(25, { duration: 150 }), withTiming(0, { duration: 150 })),
+    4 // Run the animation 4 times
+  );
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ rotate: `${rotationAnimation.value}deg` }],
+  }));
+
+  return (
+    <Animated.View style={animatedStyle}>
+      <ThemedText style={styles.text}>👋</ThemedText>
+    </Animated.View>
+  );
+}
+
+const styles = StyleSheet.create({
+  text: {
+    fontSize: 28,
+    lineHeight: 32,
+    marginTop: -6,
+  },
+});
+```
+</Accordion>
+
+### Animation Sequence
+
+1. Rotates from 0° to 25° over 150ms
+2. Rotates back from 25° to 0° over 150ms
+3. Repeats 4 times
+4. Total animation duration: 1.2 seconds (300ms × 4)
+
+### Usage Example
+
+```tsx
+import { HelloWave } from '@/components/HelloWave';
+import { ThemedText } from '@/components/ThemedText';
+
+<ThemedView style={{ flexDirection: 'row', alignItems: 'center' }}>
+  <ThemedText type="title">Hello </ThemedText>
+  <HelloWave />
+</ThemedView>
+```
+
+---
+
+## TabBarIcon
+
+Icon component for bottom tab navigation using Ionicons.
+
+<Accordion title="Full Source Code (components/navigation/TabBarIcon.tsx:1-10)">
+```typescript
+import Ionicons from '@expo/vector-icons/Ionicons';
+import { type IconProps } from '@expo/vector-icons/build/createIconSet';
+import { type ComponentProps } from 'react';
+
+export function TabBarIcon({ style, ...rest }: IconProps<ComponentProps<typeof Ionicons>['name']>) {
+  return <Ionicons size={28} style={[{ marginBottom: -3 }, style]} {...rest} />;
+}
+```
+</Accordion>
+
+### Props
+
+<ParamField path="name" type="IoniconsName" required>
+  Ionicons icon name (e.g., 'home', 'settings', 'person')
+  
+  See [Expo Icons](https://icons.expo.fyi/) for full list
+</ParamField>
+
+<ParamField path="color" type="string">
+  Icon color (typically controlled by tab navigator)
+</ParamField>
+
+<ParamField path="style" type="StyleProp<TextStyle>">
+  Additional styles
+</ParamField>
+
+### Default Styling
+
+- Size: 28px
+- Margin bottom: -3px (aligns icon vertically in tab bar)
+
+### Usage in Tab Navigator
+
+```tsx
+import { Tabs } from 'expo-router';
+import { TabBarIcon } from '@/components/navigation/TabBarIcon';
+
+<Tabs
+  screenOptions={{
+    tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
+  }}
+>
+  <Tabs.Screen
+    name="index"
+    options={{
+      title: 'Home',
+      tabBarIcon: ({ color, focused }) => (
+        <TabBarIcon name={focused ? 'home' : 'home-outline'} color={color} />
+      ),
+    }}
+  />
+  <Tabs.Screen
+    name="profile"
+    options={{
+      title: 'Profile',
+      tabBarIcon: ({ color, focused }) => (
+        <TabBarIcon name={focused ? 'person' : 'person-outline'} color={color} />
+      ),
+    }}
+  />
+</Tabs>
+```
+
+### Common Icon Names
+
+<Tabs>
+  <Tab title="Navigation">
+    - `home` / `home-outline`
+    - `search` / `search-outline`
+    - `settings` / `settings-outline`
+    - `menu` / `menu-outline`
+  </Tab>
+  
+  <Tab title="User Actions">
+    - `person` / `person-outline`
+    - `heart` / `heart-outline`
+    - `bookmark` / `bookmark-outline`
+    - `notifications` / `notifications-outline`
+  </Tab>
+  
+  <Tab title="Content">
+    - `list` / `list-outline`
+    - `grid` / `grid-outline`
+    - `calendar` / `calendar-outline`
+    - `camera` / `camera-outline`
+  </Tab>
+</Tabs>
+
+---
+
+## Best Practices
+
+### Collapsible
+
+- Use clear, concise titles
+- Don't nest Collapsibles too deeply (max 2 levels)
+- Group related collapsible sections together
+
+### ParallaxScrollView
+
+- Use high-quality header images (at least 750×500)
+- Keep header background colors subtle
+- Ensure header content is visible against background
+- Test scroll performance on lower-end devices
+
+### ExternalLink
+
+- Always use for external URLs (not internal routing)
+- Style children with `type="link"` for consistency
+- Provide context about where the link goes
+
+```tsx
+<ThemedText>
+  Learn more in our{' '}
+  <ExternalLink href="https://docs.biotea.app">
+    <ThemedText type="link">documentation</ThemedText>
+  </ExternalLink>
+</ThemedText>
+```
+
+### TabBarIcon
+
+- Use outline variants for inactive state, solid for active
+- Match icon semantics to tab purpose
+- Let the navigator control color prop
+- Test icons at different screen sizes

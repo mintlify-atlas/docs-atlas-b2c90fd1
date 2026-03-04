@@ -1,0 +1,422 @@
+---
+title: 'Themed Components'
+description: 'Deep dive into BioTea theme-aware components that adapt to light and dark modes'
+---
+
+# Themed Components
+
+BioTea uses a theming system built on React Native's `useColorScheme` hook and custom color constants to provide automatic light/dark mode support.
+
+## Theming Architecture
+
+### Color Constants
+
+All theme colors are defined in `constants/Colors.ts`:
+
+```typescript
+const tintColorLight = '#0a7ea4';
+const tintColorDark = '#fff';
+
+export const Colors = {
+  light: {
+    text: '#11181C',
+    background: '#fff',
+    tint: tintColorLight,
+    icon: '#687076',
+    tabIconDefault: '#687076',
+    tabIconSelected: tintColorLight,
+  },
+  dark: {
+    text: '#ECEDEE',
+    background: '#151718',
+    tint: tintColorDark,
+    icon: '#9BA1A6',
+    tabIconDefault: '#9BA1A6',
+    tabIconSelected: tintColorDark,
+  },
+};
+```
+
+### useThemeColor Hook
+
+The `useThemeColor` hook (`hooks/useThemeColor.ts`) provides the theming logic:
+
+```typescript
+import { useColorScheme } from 'react-native';
+import { Colors } from '@/constants/Colors';
+
+export function useThemeColor(
+  props: { light?: string; dark?: string },
+  colorName: keyof typeof Colors.light & keyof typeof Colors.dark
+) {
+  const theme = useColorScheme() ?? 'light';
+  const colorFromProps = props[theme];
+
+  if (colorFromProps) {
+    return colorFromProps;
+  } else {
+    return Colors[theme][colorName];
+  }
+}
+```
+
+**How it works:**
+1. Detects current color scheme (light/dark) from device settings
+2. Checks if custom colors were passed via props
+3. Falls back to default colors from `Colors` constant
+4. Returns the appropriate color for current theme
+
+---
+
+## ThemedText
+
+<Accordion title="Full Source Code (components/ThemedText.tsx:1-61)">
+```typescript
+import { Text, type TextProps, StyleSheet } from 'react-native';
+import { useThemeColor } from '@/hooks/useThemeColor';
+
+export type ThemedTextProps = TextProps & {
+  lightColor?: string;
+  darkColor?: string;
+  type?: 'default' | 'title' | 'defaultSemiBold' | 'subtitle' | 'link';
+};
+
+export function ThemedText({
+  style,
+  lightColor,
+  darkColor,
+  type = 'default',
+  ...rest
+}: ThemedTextProps) {
+  const color = useThemeColor({ light: lightColor, dark: darkColor }, 'text');
+
+  return (
+    <Text
+      style={[
+        { color },
+        type === 'default' ? styles.default : undefined,
+        type === 'title' ? styles.title : undefined,
+        type === 'defaultSemiBold' ? styles.defaultSemiBold : undefined,
+        type === 'subtitle' ? styles.subtitle : undefined,
+        type === 'link' ? styles.link : undefined,
+        style,
+      ]}
+      {...rest}
+    />
+  );
+}
+
+const styles = StyleSheet.create({
+  default: {
+    fontSize: 16,
+    lineHeight: 24,
+  },
+  defaultSemiBold: {
+    fontSize: 16,
+    lineHeight: 24,
+    fontWeight: '600',
+  },
+  title: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    lineHeight: 32,
+  },
+  subtitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+  link: {
+    lineHeight: 30,
+    fontSize: 16,
+    color: '#0a7ea4',
+  },
+});
+```
+</Accordion>
+
+### Props Interface
+
+<ParamField path="type" type="string" default="default">
+  Typography variant to apply
+  
+  **Options:**
+  - `default` - 16px, line height 24
+  - `title` - 32px bold, line height 32
+  - `defaultSemiBold` - 16px semibold (600), line height 24
+  - `subtitle` - 20px bold
+  - `link` - 16px, line height 30, teal color (#0a7ea4)
+</ParamField>
+
+<ParamField path="lightColor" type="string">
+  Custom text color for light mode (overrides theme default)
+</ParamField>
+
+<ParamField path="darkColor" type="string">
+  Custom text color for dark mode (overrides theme default)
+</ParamField>
+
+<ParamField path="...TextProps" type="TextProps">
+  All standard React Native Text props (style, numberOfLines, etc.)
+</ParamField>
+
+### Typography Variants
+
+<Tabs>
+  <Tab title="default">
+    Standard body text
+    
+    ```tsx
+    <ThemedText>Regular paragraph text</ThemedText>
+    <ThemedText type="default">Explicit default</ThemedText>
+    ```
+    
+    **Style:** 16px, line height 24
+  </Tab>
+  
+  <Tab title="title">
+    Page or section titles
+    
+    ```tsx
+    <ThemedText type="title">Welcome to BioTea</ThemedText>
+    ```
+    
+    **Style:** 32px bold, line height 32
+  </Tab>
+  
+  <Tab title="subtitle">
+    Section headings
+    
+    ```tsx
+    <ThemedText type="subtitle">Recent Activity</ThemedText>
+    ```
+    
+    **Style:** 20px bold
+  </Tab>
+  
+  <Tab title="defaultSemiBold">
+    Emphasized text
+    
+    ```tsx
+    <ThemedText type="defaultSemiBold">Important notice</ThemedText>
+    ```
+    
+    **Style:** 16px semibold (600), line height 24
+  </Tab>
+  
+  <Tab title="link">
+    Hyperlinks and interactive text
+    
+    ```tsx
+    <ThemedText type="link">Learn more</ThemedText>
+    ```
+    
+    **Style:** 16px, line height 30, teal (#0a7ea4)
+  </Tab>
+</Tabs>
+
+### Usage Examples
+
+#### Basic Usage
+
+```tsx
+import { ThemedText } from '@/components/ThemedText';
+
+<ThemedText>This text automatically adapts to light/dark mode</ThemedText>
+```
+
+#### Custom Colors
+
+```tsx
+<ThemedText 
+  lightColor="#ff0000" 
+  darkColor="#00ff00"
+>
+  Red in light mode, green in dark mode
+</ThemedText>
+```
+
+#### With Custom Styles
+
+```tsx
+<ThemedText 
+  type="subtitle"
+  style={{ marginBottom: 10, textAlign: 'center' }}
+>
+  Centered Subtitle
+</ThemedText>
+```
+
+#### Typography Hierarchy
+
+```tsx
+<ThemedView>
+  <ThemedText type="title">Article Title</ThemedText>
+  <ThemedText type="subtitle">Section Heading</ThemedText>
+  <ThemedText type="defaultSemiBold">Important point:</ThemedText>
+  <ThemedText>Regular body text goes here...</ThemedText>
+  <ThemedText type="link">Read more →</ThemedText>
+</ThemedView>
+```
+
+---
+
+## ThemedView
+
+<Accordion title="Full Source Code (components/ThemedView.tsx:1-15)">
+```typescript
+import { View, type ViewProps } from 'react-native';
+import { useThemeColor } from '@/hooks/useThemeColor';
+
+export type ThemedViewProps = ViewProps & {
+  lightColor?: string;
+  darkColor?: string;
+};
+
+export function ThemedView({ style, lightColor, darkColor, ...otherProps }: ThemedViewProps) {
+  const backgroundColor = useThemeColor({ light: lightColor, dark: darkColor }, 'background');
+
+  return <View style={[{ backgroundColor }, style]} {...otherProps} />;
+}
+```
+</Accordion>
+
+### Props Interface
+
+<ParamField path="lightColor" type="string">
+  Custom background color for light mode (overrides theme default `#fff`)
+</ParamField>
+
+<ParamField path="darkColor" type="string">
+  Custom background color for dark mode (overrides theme default `#151718`)
+</ParamField>
+
+<ParamField path="...ViewProps" type="ViewProps">
+  All standard React Native View props (style, children, etc.)
+</ParamField>
+
+### Usage Examples
+
+#### Basic Container
+
+```tsx
+import { ThemedView } from '@/components/ThemedView';
+
+<ThemedView style={{ padding: 20, borderRadius: 8 }}>
+  <ThemedText>Content with themed background</ThemedText>
+</ThemedView>
+```
+
+#### Custom Background Colors
+
+```tsx
+<ThemedView 
+  lightColor="#f0f0f0" 
+  darkColor="#2a2a2a"
+  style={{ padding: 16 }}
+>
+  <ThemedText>Custom background for light/dark modes</ThemedText>
+</ThemedView>
+```
+
+#### Nested Layout
+
+```tsx
+<ThemedView style={{ flex: 1 }}>
+  <ThemedView 
+    lightColor="#e8f4f8" 
+    darkColor="#1a3a42"
+    style={{ padding: 20, margin: 10, borderRadius: 12 }}
+  >
+    <ThemedText type="subtitle">Card Title</ThemedText>
+    <ThemedText>Card content goes here</ThemedText>
+  </ThemedView>
+</ThemedView>
+```
+
+---
+
+## Best Practices
+
+### Always Use Themed Components
+
+<Tabs>
+  <Tab title="Do">
+    ```tsx
+    import { ThemedText, ThemedView } from '@/components';
+    
+    <ThemedView>
+      <ThemedText>Properly themed content</ThemedText>
+    </ThemedView>
+    ```
+  </Tab>
+  
+  <Tab title="Don't">
+    ```tsx
+    import { View, Text } from 'react-native';
+    
+    <View style={{ backgroundColor: '#fff' }}>
+      <Text style={{ color: '#000' }}>Won't adapt to dark mode</Text>
+    </View>
+    ```
+  </Tab>
+</Tabs>
+
+### Override Colors Sparingly
+
+Only use custom `lightColor` and `darkColor` props when you need specific brand colors or semantic colors (success, error, etc.).
+
+```tsx
+// Good: Semantic colors
+<ThemedView 
+  lightColor="#fee" 
+  darkColor="#511"
+>
+  <ThemedText lightColor="#c00" darkColor="#f88">Error message</ThemedText>
+</ThemedView>
+
+// Avoid: Unnecessary customization
+<ThemedText lightColor="#11181C" darkColor="#ECEDEE">
+  This is redundant - these are already the defaults
+</ThemedText>
+```
+
+### Consistent Typography
+
+Use the predefined `type` prop instead of custom font sizes:
+
+```tsx
+// Good
+<ThemedText type="title">Page Title</ThemedText>
+<ThemedText type="subtitle">Section</ThemedText>
+
+// Avoid
+<ThemedText style={{ fontSize: 32, fontWeight: 'bold' }}>Title</ThemedText>
+```
+
+---
+
+## Theme Color Reference
+
+<Tabs>
+  <Tab title="Light Mode">
+    | Color | Hex | Usage |
+    |-------|-----|-------|
+    | text | `#11181C` | Default text color |
+    | background | `#fff` | Default background |
+    | tint | `#0a7ea4` | Brand color, links |
+    | icon | `#687076` | Icon color |
+    | tabIconDefault | `#687076` | Inactive tab icons |
+    | tabIconSelected | `#0a7ea4` | Active tab icons |
+  </Tab>
+  
+  <Tab title="Dark Mode">
+    | Color | Hex | Usage |
+    |-------|-----|-------|
+    | text | `#ECEDEE` | Default text color |
+    | background | `#151718` | Default background |
+    | tint | `#fff` | Brand color, links |
+    | icon | `#9BA1A6` | Icon color |
+    | tabIconDefault | `#9BA1A6` | Inactive tab icons |
+    | tabIconSelected | `#fff` | Active tab icons |
+  </Tab>
+</Tabs>

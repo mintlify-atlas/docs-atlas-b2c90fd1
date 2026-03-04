@@ -1,0 +1,206 @@
+---
+title: Architecture Overview
+description: High-level architecture and design patterns of the BioTea mobile application
+---
+
+## Application Architecture
+
+BioTea is a cross-platform mobile application built with React Native and Expo, featuring a modern authentication system with secure storage capabilities. The application follows a component-based architecture with centralized state management using React Context API.
+
+### Architecture Diagram
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                   BioTea Application                    │
+├─────────────────────────────────────────────────────────┤
+│                                                         │
+│  ┌──────────────────────────────────────────────────┐  │
+│  │            app/_layout.tsx (Root)                │  │
+│  │         Context Providers Wrapper                │  │
+│  │    ┌──────────────────────────────────┐          │  │
+│  │    │  UserProvider                    │          │  │
+│  │    │    └─ SecureStoreProvider        │          │  │
+│  │    │         └─ Stack Navigator       │          │  │
+│  │    └──────────────────────────────────┘          │  │
+│  └──────────────────────────────────────────────────┘  │
+│                         │                               │
+│       ┌─────────────────┼─────────────────┐             │
+│       │                 │                 │             │
+│   ┌───▼───┐       ┌─────▼─────┐    ┌─────▼──────┐      │
+│   │ index │       │   login   │    │  register  │      │
+│   └───────┘       └───────────┘    └────────────┘      │
+│                         │                               │
+│                   ┌─────▼─────┐                         │
+│                   │  (tabs)   │                         │
+│                   └─────┬─────┘                         │
+│                         │                               │
+│              ┌──────────┴──────────┐                    │
+│         ┌────▼────┐           ┌────▼────┐               │
+│         │ (home)  │           │(settings)│              │
+│         │  Stack  │           │  Stack   │              │
+│         └─────────┘           └──────────┘              │
+└─────────────────────────────────────────────────────────┘
+```
+
+## Core Technologies
+
+<CardGroup cols={2}>
+  <Card title="React Native" icon="react">
+    Version 0.74.1 - Cross-platform mobile framework
+  </Card>
+  <Card title="Expo" icon="mobile">
+    Version ~51.0.8 - Development platform and toolchain
+  </Card>
+  <Card title="Expo Router" icon="route">
+    Version ~3.5.14 - File-based routing system
+  </Card>
+  <Card title="TypeScript" icon="code">
+    Version ~5.3.3 - Type-safe development
+  </Card>
+</CardGroup>
+
+### Key Dependencies
+
+- **expo-secure-store** (~13.0.1) - Secure credential storage
+- **axios** (^1.7.2) - HTTP client for API requests
+- **react-native-paper** (^5.12.3) - Material Design UI components
+- **@react-native-async-storage/async-storage** (1.23.1) - Persistent storage
+- **@expo/vector-icons** (^14.0.0) - Icon library
+- **react-native-reanimated** (~3.10.1) - Advanced animations
+
+## Design Patterns
+
+### Context API for State Management
+
+BioTea uses React Context API for centralized state management across the application. Two primary contexts handle different concerns:
+
+<Accordion title="UserContext Pattern">
+  The `UserContext` provides global access to user authentication state throughout the application.
+  
+  **Location**: `components/UserContext.tsx`
+  
+  **Features**:
+  - Centralized user state management
+  - Custom `useUser()` hook for consuming user data
+  - Type-safe context implementation with TypeScript
+  
+  **Usage**:
+  ```tsx
+  const { user, setUser } = useUser();
+  ```
+</Accordion>
+
+<Accordion title="SecureStoreContext Pattern">
+  The `SecureStoreContext` provides a unified interface for secure data storage operations.
+  
+  **Location**: `components/SecureStoreContext.tsx`
+  
+  **Features**:
+  - Encrypted storage using expo-secure-store
+  - Three core operations: save, load, and delete
+  - JSON serialization for complex data types
+  
+  **Usage**:
+  ```tsx
+  const { saveSecureData, loadSecureData, deleteSecureData } = useSecureStore();
+  await saveSecureData('user', userData);
+  ```
+</Accordion>
+
+### File-Based Routing
+
+<Info>
+  BioTea leverages **expo-router** for file-based routing, where the file structure in the `app/` directory directly maps to navigation routes. This eliminates the need for manual route configuration.
+</Info>
+
+Key routing features:
+- Automatic route generation from file structure
+- Type-safe routes with `typedRoutes` experiment enabled
+- Support for route groups using `(groupName)` syntax
+- Stack and Tab navigation patterns
+
+### Component-Based UI Architecture
+
+The application follows a modular component architecture:
+
+**Themed Components**: `ThemedText.tsx` and `ThemedView.tsx` provide consistent styling that automatically adapts to light/dark mode.
+
+**Reusable Components**: Common UI patterns like `Collapsible`, `ParallaxScrollView`, and `TabBarIcon` are extracted into shared components.
+
+**Custom Hooks**: The `hooks/` directory contains reusable logic:
+- `useColorScheme` - Detects system color scheme preference
+- `useThemeColor` - Retrieves theme-specific colors
+
+## Authentication Flow
+
+The authentication flow integrates multiple architectural patterns:
+
+1. **Initial Screen** (`index.tsx`) - Landing page with navigation to login
+2. **Login Screen** (`login.tsx`) - Handles user authentication via API
+3. **Context Updates** - `UserContext` and `SecureStoreContext` store authenticated user
+4. **Navigation** - Successful login navigates to `(tabs)/(home)/inic`
+5. **Persistent Sessions** - User data stored securely for session persistence
+
+<Note>
+  The authentication flow uses axios to communicate with a PHP backend API endpoint defined in `constants/Urls.ts`. Upon successful authentication, user data is stored both in React Context (for immediate access) and SecureStore (for persistence).
+</Note>
+
+## Navigation Structure
+
+The app uses a nested navigation structure:
+
+```
+Stack Navigator (Root)
+├── index (Welcome screen)
+├── login (Authentication)
+├── register (User registration)
+└── (tabs) - Tab Navigator
+    ├── (home) - Stack Navigator
+    │   └── inic (Home screen)
+    └── (settings) - Stack Navigator
+        ├── settingsG (Settings main)
+        ├── general (General settings)
+        ├── notification (Notification settings)
+        └── user (User profile)
+```
+
+## Configuration
+
+### Expo Configuration
+
+The `app.json` file defines:
+- App metadata (name: "BioTea", version: "1.0.0")
+- Platform-specific settings (iOS, Android, Web)
+- Plugins: expo-router, expo-secure-store
+- Typed routes experiment enabled
+- Custom URL scheme: "myapp"
+
+### TypeScript Configuration
+
+The project uses TypeScript for type safety across all components, with strict type checking configured in `tsconfig.json`.
+
+## Development Approach
+
+<CardGroup cols={2}>
+  <Card title="Cross-Platform" icon="devices">
+    Single codebase targets iOS, Android, and Web platforms
+  </Card>
+  <Card title="Type Safety" icon="shield-check">
+    TypeScript ensures compile-time type checking
+  </Card>
+  <Card title="Modular Design" icon="cubes">
+    Reusable components and custom hooks
+  </Card>
+  <Card title="Secure by Default" icon="lock">
+    Encrypted storage for sensitive data
+  </Card>
+</CardGroup>
+
+## Best Practices Implemented
+
+- **Separation of Concerns**: UI components, business logic, and state management are clearly separated
+- **Custom Hooks**: Encapsulate reusable logic (color scheme, theme colors)
+- **Context Providers**: Centralized state accessible throughout the component tree
+- **Type Safety**: TypeScript interfaces for context types and props
+- **Secure Storage**: Sensitive data encrypted using expo-secure-store
+- **File-Based Routing**: Intuitive navigation structure matching file system

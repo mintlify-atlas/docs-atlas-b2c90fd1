@@ -1,0 +1,310 @@
+---
+title: File Structure
+description: Detailed documentation of BioTea's directory layout and file organization
+---
+
+## Project Structure Overview
+
+The BioTea application follows a well-organized directory structure that separates concerns and makes the codebase maintainable and scalable.
+
+```
+BioTea/
+├── app/                    # Application screens and routing
+├── assets/                 # Static assets (images, fonts)
+├── components/             # Reusable UI components
+├── constants/              # Application constants
+├── hooks/                  # Custom React hooks
+├── scripts/                # Build and utility scripts
+├── app.json               # Expo configuration
+├── package.json           # Dependencies and scripts
+├── tsconfig.json          # TypeScript configuration
+└── babel.config.js        # Babel configuration
+```
+
+## Directory Breakdown
+
+### `/app` - Application Routes
+
+The `app/` directory contains all screen components and defines the navigation structure using expo-router's file-based routing system.
+
+<Accordion title="Root Level Routes">
+  **Location**: `app/`
+  
+  Core application entry points and authentication screens:
+  
+  - **`_layout.tsx`** - Root layout component that wraps the entire app with context providers (UserProvider, SecureStoreProvider) and configures the Stack navigator with custom header styling
+  - **`index.tsx`** - Welcome/landing screen with navigation to login
+  - **`login.tsx`** - User authentication screen with username/password inputs and API integration
+  - **`register.tsx`** - User registration screen (implementation in progress)
+  
+  The root `_layout.tsx` establishes the foundational navigation structure:
+  ```tsx
+  <UserProvider>
+    <SecureStoreProvider>
+      <Stack>
+        <Stack.Screen name="index" />
+        <Stack.Screen name="login" />
+        <Stack.Screen name="register" />
+        <Stack.Screen name="(tabs)" />
+      </Stack>
+    </SecureStoreProvider>
+  </UserProvider>
+  ```
+</Accordion>
+
+<Accordion title="/(tabs) - Tab Navigation Group">
+  **Location**: `app/(tabs)/`
+  
+  This route group implements the main tab navigation interface.
+  
+  - **`_layout.tsx`** - Tab navigator configuration with two tabs:
+    - Home tab (using FontAwesome 'home' icon)
+    - Settings tab (using FontAwesome 'cog' icon)
+  
+  **Nested Route Groups**:
+  
+  1. **`(home)/`** - Home tab stack
+     - `_layout.tsx` - Stack navigator for home screens
+     - `inic.tsx` - Main home screen (authenticated user landing page)
+  
+  2. **`(settings)/`** - Settings tab stack
+     - `_layout.tsx` - Stack navigator for settings screens
+     - `settingsG.tsx` - Main settings screen
+     - `general.tsx` - General settings
+     - `notification.tsx` - Notification preferences
+     - `user.tsx` - User profile settings
+</Accordion>
+
+<Info>
+  The parentheses `()` in folder names like `(tabs)`, `(home)`, and `(settings)` indicate **route groups** in expo-router. These groups organize routes without affecting the URL path structure.
+</Info>
+
+### `/components` - Reusable Components
+
+Shared UI components and context providers used throughout the application.
+
+#### Context Providers
+
+<CardGroup cols={2}>
+  <Card title="UserContext.tsx" icon="user">
+    Global user state management
+    - Stores authenticated user data
+    - Provides `useUser()` hook
+    - TypeScript interface for type safety
+  </Card>
+  <Card title="SecureStoreContext.tsx" icon="lock">
+    Secure storage operations
+    - `saveSecureData()` - Encrypt and store
+    - `loadSecureData()` - Retrieve and decrypt
+    - `deleteSecureData()` - Remove stored data
+  </Card>
+</CardGroup>
+
+#### UI Components
+
+**Themed Components**:
+- **`ThemedText.tsx`** - Text component with automatic theme adaptation
+- **`ThemedView.tsx`** - View container with theme-aware styling
+
+**Specialized Components**:
+- **`Collapsible.tsx`** - Expandable/collapsible content container
+- **`ParallaxScrollView.tsx`** - Scroll view with parallax header effect
+- **`HelloWave.tsx`** - Animated wave emoji component
+- **`ExternalLink.tsx`** - Link component for external URLs
+
+**Navigation Components**:
+- **`navigation/TabBarIcon.tsx`** - Icon component for tab bar items
+
+#### Tests
+
+- **`__tests__/ThemedText-test.tsx`** - Unit tests for ThemedText component
+- **`__tests__/__snapshots__/`** - Jest snapshot files
+
+### `/constants` - Application Constants
+
+Centralized configuration and constant values.
+
+<Accordion title="Colors.ts">
+  **Purpose**: Define the application's color scheme for light and dark modes.
+  
+  **Structure**:
+  ```typescript
+  export const Colors = {
+    light: {
+      text: '#11181C',
+      background: '#fff',
+      tint: '#0a7ea4',
+      icon: '#687076',
+      tabIconDefault: '#687076',
+      tabIconSelected: '#0a7ea4',
+    },
+    dark: {
+      text: '#ECEDEE',
+      background: '#151718',
+      tint: '#fff',
+      icon: '#9BA1A6',
+      tabIconDefault: '#9BA1A6',
+      tabIconSelected: '#fff',
+    },
+  };
+  ```
+  
+  Used by themed components to provide consistent styling across the app.
+</Accordion>
+
+<Accordion title="Urls.ts">
+  **Purpose**: Centralize API endpoint configuration.
+  
+  **Content**:
+  ```typescript
+  export const apiEndpoints = {
+    prod: 'https://simulacion7sb.000webhostapp.com/api',
+    dev: 'https://simulacion7sb.000webhostapp.com/api',
+    produccion: 'https://simulacion7sb.000webhostapp.com'
+  };
+  ```
+  
+  Used in `login.tsx` and other screens that communicate with the backend API.
+</Accordion>
+
+### `/hooks` - Custom React Hooks
+
+Reusable logic encapsulated in custom hooks following React best practices.
+
+| Hook | Purpose | Platform |
+|------|---------|----------|
+| `useColorScheme.ts` | Detect system color scheme (light/dark) | Native |
+| `useColorScheme.web.ts` | Web-specific color scheme detection | Web |
+| `useThemeColor.ts` | Get theme-specific color values | All |
+
+<Note>
+  The `.web.ts` extension allows platform-specific implementations. React Native automatically uses `useColorScheme.web.ts` when running on web and `useColorScheme.ts` on native platforms.
+</Note>
+
+### `/assets` - Static Resources
+
+Static files including images, fonts, and other resources.
+
+```
+assets/
+├── fonts/              # Custom font files
+└── images/             # App icons, splash screens, images
+    ├── icon.png        # App icon
+    ├── splash.png      # Splash screen
+    ├── adaptive-icon.png  # Android adaptive icon
+    └── favicon.png     # Web favicon
+```
+
+### `/scripts` - Build Scripts
+
+Utility scripts for development and build processes.
+
+- **Purpose**: Automate common development tasks
+- **Referenced in**: `package.json` scripts section
+
+## Configuration Files
+
+### `app.json` - Expo Configuration
+
+<Accordion title="Expo App Configuration">
+  Defines app metadata and platform-specific settings:
+  
+  **Key Settings**:
+  - App name: "BioTea"
+  - Version: 1.0.0
+  - Orientation: portrait
+  - URL scheme: "myapp"
+  - User interface style: automatic (supports light/dark mode)
+  
+  **Plugins**:
+  - expo-router (file-based routing)
+  - expo-secure-store (encrypted storage)
+  
+  **Experiments**:
+  - `typedRoutes: true` - Enables TypeScript type generation for routes
+  
+  **Platform Configurations**:
+  - iOS: Tablet support enabled
+  - Android: Adaptive icon configuration
+  - Web: Metro bundler, static output
+</Accordion>
+
+### `package.json` - Dependencies
+
+<Accordion title="Project Dependencies">
+  **Production Dependencies** (Key Highlights):
+  - `expo` (~51.0.8) - Expo SDK
+  - `expo-router` (~3.5.14) - Routing system
+  - `expo-secure-store` (~13.0.1) - Secure storage
+  - `react-native` (0.74.1) - Core framework
+  - `axios` (^1.7.2) - HTTP client
+  - `react-native-paper` (^5.12.3) - UI components
+  
+  **Development Dependencies**:
+  - `typescript` (~5.3.3)
+  - `jest` (^29.2.1) - Testing framework
+  - `@types/react` (~18.2.45) - TypeScript types
+  
+  **Scripts**:
+  - `start` - Start Expo development server
+  - `android` - Run on Android
+  - `ios` - Run on iOS
+  - `web` - Run on web browser
+  - `test` - Run Jest tests
+  - `lint` - Run ESLint
+</Accordion>
+
+### `tsconfig.json` - TypeScript Configuration
+
+Configures TypeScript compiler options for the project, ensuring type safety and proper module resolution.
+
+### `babel.config.js` - Babel Configuration
+
+Configures Babel transpiler with Expo presets for React Native compatibility.
+
+## File Naming Conventions
+
+<Info>
+  BioTea follows these conventions:
+  - **Components**: PascalCase (e.g., `UserContext.tsx`, `ThemedText.tsx`)
+  - **Routes**: lowercase (e.g., `login.tsx`, `index.tsx`)
+  - **Layouts**: `_layout.tsx` (special expo-router convention)
+  - **Hooks**: camelCase with 'use' prefix (e.g., `useColorScheme.ts`)
+  - **Constants**: PascalCase (e.g., `Colors.ts`, `Urls.ts`)
+</Info>
+
+## Import Patterns
+
+Common import patterns used throughout the codebase:
+
+```tsx
+// React and React Native
+import React from 'react';
+import { View, Text, StyleSheet } from 'react-native';
+
+// Expo Router
+import { Stack, Tabs, useRouter } from 'expo-router';
+
+// Custom Contexts
+import { useUser } from '../components/UserContext';
+import { useSecureStore } from '../components/SecureStoreContext';
+
+// Constants
+import { Colors } from '../constants/Colors';
+import { apiEndpoints } from '../constants/Urls';
+
+// Custom Hooks
+import { useThemeColor } from '../hooks/useThemeColor';
+```
+
+## Key Files Reference
+
+| File Path | Purpose | Key Exports |
+|-----------|---------|-------------|
+| `app/_layout.tsx` | Root layout with providers | Root Stack Navigator |
+| `app/(tabs)/_layout.tsx` | Tab navigation | Tab Navigator |
+| `components/UserContext.tsx` | User state management | `UserProvider`, `useUser` |
+| `components/SecureStoreContext.tsx` | Secure storage | `SecureStoreProvider`, `useSecureStore` |
+| `constants/Colors.ts` | Theme colors | `Colors` object |
+| `constants/Urls.ts` | API endpoints | `apiEndpoints` object |
+| `hooks/useThemeColor.ts` | Theme color hook | `useThemeColor` hook |

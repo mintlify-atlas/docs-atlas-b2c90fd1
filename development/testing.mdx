@@ -1,0 +1,471 @@
+---
+title: Testing
+description: Testing practices and configuration for the BioTea mobile application
+---
+
+BioTea uses Jest with the `jest-expo` preset for unit testing and component testing. This guide covers how to write, run, and organize tests in the project.
+
+## Testing Framework
+
+BioTea's testing stack includes:
+
+- **Jest** - JavaScript testing framework
+- **jest-expo** - Expo-specific Jest preset (version ~51.0.2)
+- **react-test-renderer** - React component testing utilities
+- **TypeScript** - Type-safe test development
+
+### Jest Configuration
+
+The Jest configuration is defined in `package.json`:
+
+```json
+{
+  "jest": {
+    "preset": "jest-expo"
+  }
+}
+```
+
+The `jest-expo` preset automatically configures:
+- Babel transformation for React Native
+- Module mocking for Expo APIs
+- Asset mocking for images and fonts
+- TypeScript support
+- React Native environment setup
+
+## Running Tests
+
+BioTea provides an npm script for running tests with watch mode enabled:
+
+```bash
+npm test
+```
+
+This command runs `jest --watchAll`, which:
+- Runs all tests initially
+- Watches for file changes
+- Re-runs affected tests when files are modified
+- Provides an interactive menu for filtering tests
+
+<Note>
+  The `--watchAll` flag ensures all tests run on startup and continue watching. This is ideal for development but may be resource-intensive for large test suites.
+</Note>
+
+### Test Running Options
+
+<CodeGroup>
+```bash Watch Mode (Default)
+# Run all tests and watch for changes
+npm test
+```
+
+```bash Run Once
+# Run all tests once and exit (useful for CI/CD)
+npx jest
+```
+
+```bash Run Specific File
+# Run tests in a specific file
+npx jest components/__tests__/ThemedText-test.tsx
+```
+
+```bash Pattern Matching
+# Run tests matching a pattern
+npx jest --testNamePattern="renders correctly"
+```
+
+```bash Coverage Report
+# Generate code coverage report
+npx jest --coverage
+```
+
+```bash Update Snapshots
+# Update all snapshot tests
+npx jest --updateSnapshot
+# Or press 'u' in watch mode
+```
+</CodeGroup>
+
+## Test File Organization
+
+BioTea follows the standard React Native testing convention:
+
+### Current Test Structure
+
+```
+source/
+└── components/
+    ├── __tests__/
+    │   ├── __snapshots__/
+    │   │   └── ThemedText-test.tsx.snap
+    │   └── ThemedText-test.tsx
+    └── ThemedText.tsx
+```
+
+### Naming Conventions
+
+- **Test files:** `ComponentName-test.tsx` or `ComponentName.test.tsx`
+- **Spec files:** `ComponentName.spec.tsx` (alternative, not currently used)
+- **Test directory:** `__tests__/` folder alongside source files
+- **Snapshots:** `__tests__/__snapshots__/` folder
+
+<Tip>
+  Place test files in a `__tests__` directory next to the code they're testing. This keeps tests close to implementation and makes them easier to find.
+</Tip>
+
+## Writing Tests
+
+### Component Snapshot Testing
+
+BioTea includes a snapshot test example in `components/__tests__/ThemedText-test.tsx`:
+
+```typescript
+import * as React from 'react';
+import renderer from 'react-test-renderer';
+import { ThemedText } from '../ThemedText';
+
+it('renders correctly', () => {
+  const tree = renderer.create(<ThemedText>Snapshot test!</ThemedText>).toJSON();
+  expect(tree).toMatchSnapshot();
+});
+```
+
+This test:
+1. Imports the component and test renderer
+2. Renders the component to a JSON tree
+3. Compares the output to a saved snapshot
+4. Fails if the component output changes unexpectedly
+
+<Note>
+  Snapshot tests are useful for catching unintended UI changes but should be combined with behavior tests for comprehensive coverage.
+</Note>
+
+### Testing Best Practices for BioTea
+
+#### Testing Authentication Components
+
+Since BioTea uses `SecureStoreProvider` and `UserProvider` context:
+
+```typescript
+import { render } from '@testing-library/react-native';
+import { UserProvider } from '../UserContext';
+import { LoginScreen } from '../login';
+
+it('renders login form', () => {
+  const { getByText, getByPlaceholderText } = render(
+    <UserProvider>
+      <LoginScreen />
+    </UserProvider>
+  );
+  
+  expect(getByPlaceholderText('Email')).toBeTruthy();
+  expect(getByPlaceholderText('Password')).toBeTruthy();
+  expect(getByText('Login')).toBeTruthy();
+});
+```
+
+#### Testing Navigation
+
+BioTea uses Expo Router. To test components with navigation:
+
+```typescript
+import { router } from 'expo-router';
+
+jest.mock('expo-router', () => ({
+  router: {
+    push: jest.fn(),
+    replace: jest.fn(),
+  },
+}));
+
+it('navigates to home on successful login', async () => {
+  // Test navigation logic
+  expect(router.push).toHaveBeenCalledWith('/(tabs)/(home)/inic');
+});
+```
+
+#### Testing API Calls
+
+BioTea uses Axios for HTTP requests:
+
+```typescript
+import axios from 'axios';
+import { loginUser } from '../api/auth';
+
+jest.mock('axios');
+const mockedAxios = axios as jest.Mocked<typeof axios>;
+
+it('calls login API with credentials', async () => {
+  mockedAxios.post.mockResolvedValue({
+    data: { token: 'abc123', user: { id: 1, email: 'test@example.com' } }
+  });
+  
+  const result = await loginUser('test@example.com', 'password');
+  
+  expect(mockedAxios.post).toHaveBeenCalledWith('/auth/login', {
+    email: 'test@example.com',
+    password: 'password'
+  });
+  expect(result.token).toBe('abc123');
+});
+```
+
+#### Testing Secure Storage
+
+Mock `expo-secure-store` for testing:
+
+```typescript
+jest.mock('expo-secure-store', () => ({
+  setItemAsync: jest.fn(),
+  getItemAsync: jest.fn(),
+  deleteItemAsync: jest.fn(),
+}));
+
+import * as SecureStore from 'expo-secure-store';
+
+it('stores token securely', async () => {
+  await saveAuthToken('abc123');
+  expect(SecureStore.setItemAsync).toHaveBeenCalledWith('authToken', 'abc123');
+});
+```
+
+### Test Structure Template
+
+```typescript
+import * as React from 'react';
+import { render, fireEvent, waitFor } from '@testing-library/react-native';
+import { MyComponent } from '../MyComponent';
+
+describe('MyComponent', () => {
+  it('renders correctly', () => {
+    const { getByText } = render(<MyComponent />);
+    expect(getByText('Expected Text')).toBeTruthy();
+  });
+
+  it('handles user interaction', () => {
+    const mockCallback = jest.fn();
+    const { getByText } = render(<MyComponent onPress={mockCallback} />);
+    
+    fireEvent.press(getByText('Button'));
+    
+    expect(mockCallback).toHaveBeenCalledTimes(1);
+  });
+
+  it('updates state correctly', async () => {
+    const { getByText, getByTestId } = render(<MyComponent />);
+    
+    fireEvent.changeText(getByTestId('input'), 'New Value');
+    
+    await waitFor(() => {
+      expect(getByText('New Value')).toBeTruthy();
+    });
+  });
+});
+```
+
+## Testing Utilities
+
+### React Testing Library
+
+While not currently installed, consider adding `@testing-library/react-native` for better component testing:
+
+```bash
+npm install --save-dev @testing-library/react-native @testing-library/jest-native
+```
+
+This provides helpful utilities like:
+- `render()` - Render components
+- `fireEvent` - Simulate user interactions
+- `waitFor()` - Wait for async changes
+- `screen` queries - Find elements by text, role, testID
+
+### TypeScript Type Checking
+
+BioTea uses TypeScript in strict mode. Ensure your tests are type-safe:
+
+```typescript
+import { render, RenderAPI } from '@testing-library/react-native';
+
+let component: RenderAPI;
+
+beforeEach(() => {
+  component = render(<MyComponent prop="value" />);
+});
+
+it('has correct props', () => {
+  expect(component.getByText('value')).toBeTruthy();
+});
+```
+
+## Code Coverage
+
+Generate a coverage report to identify untested code:
+
+```bash
+npx jest --coverage
+```
+
+This creates a coverage report in the `coverage/` directory showing:
+- Percentage of lines covered
+- Percentage of branches covered
+- Percentage of functions covered
+- Percentage of statements covered
+
+<Warning>
+  The `coverage/` directory should be added to `.gitignore` to avoid committing generated files.
+</Warning>
+
+### Coverage Thresholds
+
+To enforce minimum coverage, add to `package.json`:
+
+```json
+{
+  "jest": {
+    "preset": "jest-expo",
+    "coverageThreshold": {
+      "global": {
+        "branches": 70,
+        "functions": 70,
+        "lines": 70,
+        "statements": 70
+      }
+    }
+  }
+}
+```
+
+## Continuous Integration
+
+For CI/CD pipelines, run tests without watch mode:
+
+```bash
+# Run tests once and exit
+npx jest --ci --coverage --maxWorkers=2
+```
+
+Recommended CI configuration:
+
+<CodeGroup>
+```yaml GitHub Actions
+name: Test
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      - run: npm install
+      - run: npx jest --ci --coverage
+```
+
+```yaml GitLab CI
+test:
+  image: node:18
+  script:
+    - npm install
+    - npx jest --ci --coverage
+  coverage: '/Lines\s*:\s*(\d+\.\d+)%/'
+```
+</CodeGroup>
+
+## Linting and Type Checking
+
+In addition to unit tests, BioTea provides linting:
+
+```bash
+npm run lint
+```
+
+This runs `expo lint` which uses ESLint with Expo's recommended configuration.
+
+### Pre-Commit Checks
+
+Consider adding pre-commit hooks with Husky to run tests and linting:
+
+```bash
+npm install --save-dev husky lint-staged
+```
+
+```json package.json
+{
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "eslint --fix",
+      "jest --bail --findRelatedTests"
+    ]
+  }
+}
+```
+
+## Debugging Tests
+
+### Running Tests in Debug Mode
+
+```bash
+# Debug with Node inspector
+node --inspect-brk node_modules/.bin/jest --runInBand
+```
+
+Then open `chrome://inspect` in Chrome and click "inspect" on the Node process.
+
+### VS Code Debugging
+
+Add to `.vscode/launch.json`:
+
+```json
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Jest Debug",
+      "program": "${workspaceFolder}/node_modules/.bin/jest",
+      "args": ["--runInBand", "--no-cache"],
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen"
+    }
+  ]
+}
+```
+
+### Verbose Output
+
+```bash
+npx jest --verbose
+```
+
+Shows individual test results instead of grouped output.
+
+## Expanding Test Coverage
+
+BioTea currently has minimal test coverage. Consider adding tests for:
+
+1. **Authentication flows** - Login, registration, logout
+2. **Secure storage operations** - Token storage and retrieval
+3. **Navigation** - Route transitions and navigation guards
+4. **Context providers** - UserContext and SecureStoreContext
+5. **Tab screens** - Home, settings, notifications
+6. **API integrations** - Mock Axios requests
+7. **Form validation** - Input validation and error handling
+8. **UI components** - ThemedText, buttons, inputs
+
+<Tip>
+  Start by testing critical paths (authentication) and gradually increase coverage. Aim for 70-80% coverage of business logic.
+</Tip>
+
+## Testing Resources
+
+- [Jest Documentation](https://jestjs.io/docs/getting-started)
+- [Testing React Native Apps](https://reactnative.dev/docs/testing-overview)
+- [Expo Testing Guide](https://docs.expo.dev/develop/unit-testing/)
+- [React Testing Library](https://testing-library.com/docs/react-native-testing-library/intro/)
+- [Jest Expo Preset](https://github.com/expo/expo/tree/main/packages/jest-expo)
+
+## Next Steps
+
+With testing configured, you can confidently develop new features knowing that existing functionality is protected by automated tests. Consider integrating tests into your development workflow and CI/CD pipeline.

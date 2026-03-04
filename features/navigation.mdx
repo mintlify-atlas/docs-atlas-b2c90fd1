@@ -1,0 +1,487 @@
+---
+title: Navigation
+description: Understanding BioTea's file-based routing with Expo Router, tab navigation, and screen organization
+---
+
+## Overview
+
+BioTea uses [Expo Router](https://docs.expo.dev/router/introduction/) for navigation, which provides file-based routing similar to Next.js. The app structure includes Stack navigation at the root level and Tab navigation for the main authenticated screens.
+
+## File-Based Routing
+
+Expo Router automatically creates routes based on your file structure. Each file in the `app` directory becomes a route:
+
+```
+app/
+├── _layout.tsx          → Root layout (Stack navigator)
+├── index.tsx            → / (landing page)
+├── login.tsx            → /login
+├── register.tsx         → /register
+└── (tabs)/              → /(tabs) (tab group)
+    ├── _layout.tsx      → Tab navigator
+    ├── (home)/          → Home tab
+    │   ├── _layout.tsx  → Home stack
+    │   └── inic.tsx     → /(tabs)/(home)/inic
+    └── (settings)/      → Settings tab
+        ├── _layout.tsx  → Settings stack
+        ├── settingsG.tsx
+        ├── general.tsx
+        ├── notification.tsx
+        └── user.tsx
+```
+
+<Note>
+Folders wrapped in parentheses like `(tabs)`, `(home)`, and `(settings)` are route groups. They organize files without adding segments to the URL path.
+</Note>
+
+## Root Layout
+
+The root layout in `app/_layout.tsx:1` configures the main Stack navigator and context providers:
+
+```typescript app/_layout.tsx
+import { Stack } from "expo-router";
+import { UserProvider } from "../components/UserContext";
+import { SecureStoreProvider } from "../components/SecureStoreContext";
+
+export default function RootLayout() {
+  return (
+    <UserProvider>
+      <SecureStoreProvider>
+        <Stack
+          screenOptions={{
+            headerStyle: {
+              backgroundColor: '#f4511e',
+            },
+            headerTintColor: '#fff',
+            headerTitleStyle: {
+              fontWeight: 'bold',
+            },
+          }}
+        >
+          <Stack.Screen
+            name="index"
+            options={{
+              title: 'BioTea App',
+              headerShown: true
+            }}
+          />
+          <Stack.Screen name="login" />
+          <Stack.Screen name="register" />
+          <Stack.Screen
+            name="(tabs)"
+            options={{
+              headerShown: false
+            }}
+          />
+        </Stack>
+      </SecureStoreProvider>
+    </UserProvider>
+  );
+}
+```
+
+### Key Features
+
+<Accordion title="Context Providers">
+The root layout wraps the entire app with essential providers:
+
+- **UserProvider**: Manages global user state
+- **SecureStoreProvider**: Provides secure storage methods
+
+These providers ensure all screens can access user data and secure storage.
+</Accordion>
+
+<Accordion title="Stack Navigator">
+The Stack navigator manages screen transitions with a consistent header style:
+
+```typescript
+screenOptions={{
+    headerStyle: { backgroundColor: '#f4511e' },
+    headerTintColor: '#fff',
+    headerTitleStyle: { fontWeight: 'bold' },
+}}
+```
+
+All screens inherit these header styles unless overridden.
+</Accordion>
+
+<Accordion title="Screen Configuration">
+Individual screens can customize their options:
+
+```typescript
+<Stack.Screen
+    name="(tabs)"
+    options={{ headerShown: false }}
+/>
+```
+
+The tabs screen hides the header since the tab navigator has its own navigation UI.
+</Accordion>
+
+## Tab Navigation
+
+The tab navigator is defined in `app/(tabs)/_layout.tsx:1`:
+
+```typescript app/(tabs)/_layout.tsx
+import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { Tabs } from 'expo-router';
+
+export default function TabLayout() {
+    return (
+        <Tabs screenOptions={{ tabBarActiveTintColor: 'blue' }}>
+            <Tabs.Screen
+                name="(home)"
+                options={{
+                    title: 'Home',
+                    tabBarIcon: ({ color }) => <FontAwesome size={28} name="home" color={color} />,
+                }}
+            />
+            <Tabs.Screen
+                name="(settings)"
+                options={{
+                    title: 'Settings',
+                    tabBarIcon: ({ color }) => <FontAwesome size={28} name="cog" color={color} />,
+                }}
+            />
+        </Tabs>
+    );
+}
+```
+
+### Tab Structure
+
+<Tabs>
+  <Tab title="Home Tab">
+    The home tab contains the main user interface:
+    
+    ```typescript
+    <Tabs.Screen
+        name="(home)"
+        options={{
+            title: 'Home',
+            tabBarIcon: ({ color }) => <FontAwesome size={28} name="home" color={color} />,
+        }}
+    />
+    ```
+    
+    - **Icon**: Home icon from FontAwesome
+    - **Color**: Dynamic based on active state (blue when active)
+    - **Route**: `/(tabs)/(home)/inic`
+  </Tab>
+  <Tab title="Settings Tab">
+    The settings tab provides configuration screens:
+    
+    ```typescript
+    <Tabs.Screen
+        name="(settings)"
+        options={{
+            title: 'Settings',
+            tabBarIcon: ({ color }) => <FontAwesome size={28} name="cog" color={color} />,
+        }}
+    />
+    ```
+    
+    - **Icon**: Cog/gear icon from FontAwesome
+    - **Color**: Dynamic based on active state
+    - **Nested Routes**: Multiple settings screens
+  </Tab>
+</Tabs>
+
+## Nested Navigation
+
+### Settings Stack
+
+The Settings tab has its own Stack navigator in `app/(tabs)/(settings)/_layout.tsx:1`:
+
+```typescript app/(tabs)/(settings)/_layout.tsx
+import { Stack } from "expo-router";
+
+export default function RootLayout() {
+    return (
+        <Stack
+            screenOptions={{
+                headerStyle: { backgroundColor: '#f4511e' },
+                headerTintColor: '#fff',
+                headerTitleStyle: { fontWeight: 'bold' },
+            }}
+        >
+            <Stack.Screen
+                name="settingsG"
+                options={{ title: 'BioTea App', headerShown: false }}
+            />
+            <Stack.Screen
+                name="general"
+                options={{ title: 'BioTea App', headerShown: false }}
+            />
+            <Stack.Screen
+                name="notification"
+                options={{ title: 'BioTea App', headerShown: false }}
+            />
+            <Stack.Screen
+                name="user"
+                options={{ title: 'BioTea App', headerShown: false }}
+            />
+        </Stack>
+    );
+}
+```
+
+This creates a navigation stack within the Settings tab:
+- `settingsG.tsx` - Main settings screen
+- `general.tsx` - General settings
+- `notification.tsx` - Notification preferences
+- `user.tsx` - User profile settings
+
+## Navigation Methods
+
+Expo Router provides several ways to navigate between screens:
+
+<CodeGroup>
+```typescript useRouter Hook
+import { useRouter } from 'expo-router';
+
+export default function MyScreen() {
+    const router = useRouter();
+    
+    // Navigate to a route
+    const handleLogin = () => {
+        router.navigate('(tabs)/(home)/inic');
+    };
+    
+    // Go back
+    const handleBack = () => {
+        router.back();
+    };
+    
+    // Replace current route
+    const handleReplace = () => {
+        router.replace('/login');
+    };
+}
+```
+
+```typescript Link Component
+import { Link } from 'expo-router';
+
+export default function MyScreen() {
+    return (
+        <Link href="/(tabs)/(home)/inic">
+            <Text>Go to Home</Text>
+        </Link>
+    );
+}
+```
+
+```typescript Programmatic Navigation (app/login.tsx:38)
+import { useRouter } from 'expo-router';
+
+export default function Login() {
+    const router = useRouter();
+    
+    const handleLogin = async () => {
+        // ... authentication logic
+        
+        if (!response.data.error) {
+            setUser(response.data.data);
+            await saveSecureData('user', response.data.data);
+            
+            // Navigate to home after successful login
+            router.navigate('(tabs)/(home)/inic');
+        }
+    };
+}
+```
+</CodeGroup>
+
+## Common Navigation Patterns
+
+### Login Flow
+
+After successful authentication, navigate to the main app:
+
+```typescript
+// From login screen to home
+router.navigate('(tabs)/(home)/inic');
+```
+
+### Logout Flow
+
+Clear user data and return to login:
+
+```typescript
+const handleLogout = async () => {
+    // Clear state
+    setUser(null);
+    await deleteSecureData('user');
+    
+    // Navigate to login
+    router.replace('/login');
+};
+```
+
+<Note>
+Use `router.replace()` for logout to prevent users from navigating back to authenticated screens.
+</Note>
+
+### Deep Linking
+
+Navigate to specific nested routes:
+
+```typescript
+// Navigate to settings → user profile
+router.navigate('(tabs)/(settings)/user');
+
+// Navigate to settings → notifications
+router.navigate('(tabs)/(settings)/notification');
+```
+
+## Screen Options
+
+Customize individual screens with options:
+
+<Accordion title="Header Configuration">
+```typescript
+<Stack.Screen
+    name="login"
+    options={{
+        title: 'Sign In',
+        headerShown: true,
+        headerStyle: { backgroundColor: '#f4511e' },
+        headerTintColor: '#fff',
+    }}
+/>
+```
+</Accordion>
+
+<Accordion title="Tab Bar Icons">
+```typescript
+<Tabs.Screen
+    name="(home)"
+    options={{
+        title: 'Home',
+        tabBarIcon: ({ color, size, focused }) => (
+            <FontAwesome 
+                name={focused ? 'home' : 'home-outline'} 
+                size={size || 28} 
+                color={color} 
+            />
+        ),
+    }}
+/>
+```
+</Accordion>
+
+<Accordion title="Hide Tab Bar">
+```typescript
+<Tabs.Screen
+    name="(home)"
+    options={{
+        tabBarStyle: { display: 'none' }, // Hide tab bar on this screen
+    }}
+/>
+```
+</Accordion>
+
+## Route Parameters
+
+Pass data between screens using search params:
+
+<CodeGroup>
+```typescript Passing Parameters
+import { useRouter } from 'expo-router';
+
+const router = useRouter();
+
+// Navigate with parameters
+router.navigate({
+    pathname: '(tabs)/(settings)/user',
+    params: { userId: '123', mode: 'edit' }
+});
+```
+
+```typescript Receiving Parameters
+import { useLocalSearchParams } from 'expo-router';
+
+export default function UserScreen() {
+    const params = useLocalSearchParams();
+    const { userId, mode } = params;
+    
+    return (
+        <View>
+            <Text>User ID: {userId}</Text>
+            <Text>Mode: {mode}</Text>
+        </View>
+    );
+}
+```
+</CodeGroup>
+
+## Navigation Guards
+
+Protect authenticated routes by checking user state:
+
+```typescript
+import { useEffect } from 'react';
+import { useRouter } from 'expo-router';
+import { useUser } from '../components/UserContext';
+
+export default function ProtectedScreen() {
+    const { user } = useUser();
+    const router = useRouter();
+    
+    useEffect(() => {
+        if (!user) {
+            // Redirect to login if not authenticated
+            router.replace('/login');
+        }
+    }, [user]);
+    
+    if (!user) return null;
+    
+    return <View>{/* Protected content */}</View>;
+}
+```
+
+## Best Practices
+
+<Warning>
+**Navigation Best Practices:**
+
+1. Use `router.replace()` for authentication flows to prevent back navigation
+2. Use `router.navigate()` for standard navigation to maintain history
+3. Always check user authentication before rendering protected screens
+4. Use typed route parameters with TypeScript for type safety
+5. Keep navigation logic close to user actions (button handlers)
+6. Use route groups `()` to organize files without affecting URLs
+</Warning>
+
+## TypeScript Support
+
+For better type safety, define route types:
+
+```typescript
+type RootStackParamList = {
+    index: undefined;
+    login: undefined;
+    register: undefined;
+    '(tabs)': undefined;
+};
+
+type TabsParamList = {
+    '(home)': undefined;
+    '(settings)': undefined;
+};
+
+type SettingsStackParamList = {
+    settingsG: undefined;
+    general: undefined;
+    notification: undefined;
+    user: { userId?: string; mode?: 'view' | 'edit' };
+};
+```
+
+## Related Topics
+
+- [Authentication](/features/authentication) - Navigation after login
+- [User Management](/features/user-management) - Accessing user state for route guards
+- [Expo Router Docs](https://docs.expo.dev/router/introduction/) - Official documentation

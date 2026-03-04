@@ -1,0 +1,233 @@
+---
+title: Development Environment
+description: Set up your local development environment for the BioTea mobile application
+---
+
+This guide will help you configure your development environment to build and run the BioTea React Native application.
+
+## Prerequisites
+
+<Steps>
+  <Step title="Install Node.js">
+    BioTea requires Node.js to run the development server and build tools.
+    
+    **Recommended version:** Node.js 18.x or higher (tested with v24.13.1)
+    
+    Download from [nodejs.org](https://nodejs.org/) or use a version manager like [nvm](https://github.com/nvm-sh/nvm):
+    
+    ```bash
+    # Using nvm
+    nvm install 18
+    nvm use 18
+    ```
+    
+    Verify installation:
+    ```bash
+    node --version
+    npm --version
+    ```
+  </Step>
+
+  <Step title="Install Expo CLI">
+    BioTea uses Expo SDK 51 for development and building.
+    
+    ```bash
+    npm install -g expo-cli
+    ```
+    
+    Verify installation:
+    ```bash
+    expo --version
+    ```
+  </Step>
+
+  <Step title="Install Dependencies">
+    Navigate to the project directory and install all required packages:
+    
+    ```bash
+    cd workspace/source
+    npm install
+    ```
+    
+    This will install all dependencies including:
+    - React Native 0.74.1
+    - Expo Router for navigation
+    - React Native Paper for UI components
+    - Expo Secure Store for authentication storage
+    - TypeScript for type safety
+  </Step>
+</Steps>
+
+## Platform-Specific Setup
+
+### iOS Development (macOS only)
+
+<Steps>
+  <Step title="Install Xcode">
+    Download and install Xcode from the Mac App Store (version 14 or higher recommended).
+  </Step>
+
+  <Step title="Install Xcode Command Line Tools">
+    ```bash
+    xcode-select --install
+    ```
+  </Step>
+
+  <Step title="Install CocoaPods">
+    ```bash
+    sudo gem install cocoapods
+    ```
+  </Step>
+
+  <Step title="Install iOS Simulator">
+    Open Xcode, go to **Preferences > Components** and download your preferred iOS simulator version.
+  </Step>
+</Steps>
+
+### Android Development
+
+<Steps>
+  <Step title="Install Android Studio">
+    Download and install [Android Studio](https://developer.android.com/studio).
+  </Step>
+
+  <Step title="Configure Android SDK">
+    1. Open Android Studio
+    2. Go to **Settings > Appearance & Behavior > System Settings > Android SDK**
+    3. Install the following:
+       - Android SDK Platform (API 33 or higher)
+       - Android SDK Build-Tools
+       - Android Emulator
+       - Android SDK Platform-Tools
+  </Step>
+
+  <Step title="Set Environment Variables">
+    Add to your `.bashrc`, `.zshrc`, or equivalent:
+    
+    ```bash
+    export ANDROID_HOME=$HOME/Library/Android/sdk  # macOS
+    # export ANDROID_HOME=$HOME/Android/Sdk  # Linux
+    export PATH=$PATH:$ANDROID_HOME/emulator
+    export PATH=$PATH:$ANDROID_HOME/platform-tools
+    ```
+    
+    Reload your shell configuration:
+    ```bash
+    source ~/.zshrc  # or ~/.bashrc
+    ```
+  </Step>
+
+  <Step title="Create an Android Virtual Device (AVD)">
+    1. Open Android Studio
+    2. Go to **Tools > Device Manager**
+    3. Click **Create Device**
+    4. Select a device definition (e.g., Pixel 5)
+    5. Download and select a system image (API 33 or higher)
+    6. Finish the setup
+  </Step>
+</Steps>
+
+### Web Development
+
+No additional setup required. BioTea can run in any modern web browser using Expo's Metro bundler with web support.
+
+## IDE Recommendations
+
+### Visual Studio Code (Recommended)
+
+BioTea is optimized for VS Code. Install these extensions for the best experience:
+
+- **ES7+ React/Redux/React-Native snippets** - Code snippets
+- **React Native Tools** - Debugging and IntelliSense
+- **Prettier - Code formatter** - Consistent code formatting
+- **ESLint** - Code linting (configured via `expo lint`)
+- **TypeScript Vue Plugin (Volar)** - Enhanced TypeScript support
+
+### Other IDEs
+
+BioTea can also be developed using:
+- **WebStorm** - Full-featured JavaScript IDE
+- **Atom** with React Native packages
+- **Sublime Text** with appropriate plugins
+
+## TypeScript Configuration
+
+BioTea uses TypeScript with strict mode enabled. The configuration is defined in `tsconfig.json`:
+
+```json
+{
+  "extends": "expo/tsconfig.base",
+  "compilerOptions": {
+    "strict": true,
+    "paths": {
+      "@/*": ["./*"]
+    }
+  }
+}
+```
+
+<Note>
+  The `@/*` path alias allows you to import files using absolute paths instead of relative paths (e.g., `import { Button } from '@/components/Button'`).
+</Note>
+
+## Environment Variables
+
+BioTea does not currently use a `.env` file for configuration. Application settings are managed through:
+
+- **app.json** - Expo configuration (app name, icons, plugins)
+- **Expo Constants** - Runtime configuration via `expo-constants`
+- **Secure Store** - Sensitive data like authentication tokens
+
+<Tip>
+  If you need to add environment variables in the future, consider using [expo-env](https://docs.expo.dev/guides/environment-variables/) for secure configuration management.
+</Tip>
+
+## Verify Your Setup
+
+Run these commands to verify your environment is ready:
+
+<CodeGroup>
+```bash Node.js
+node --version
+# Should show v18.x or higher
+```
+
+```bash npm
+npm --version
+# Should show 8.x or higher
+```
+
+```bash Expo
+expo --version
+# Should show latest Expo CLI version
+```
+
+```bash Dependencies
+npm list --depth=0
+# Should show all installed packages without errors
+```
+</CodeGroup>
+
+## Troubleshooting
+
+<Warning>
+  If you encounter `EACCES` permission errors when installing global packages, avoid using `sudo`. Instead, [configure npm to use a different directory](https://docs.npmjs.com/resolving-eacces-permissions-errors-when-installing-packages-globally).
+</Warning>
+
+### Common Issues
+
+**Metro bundler won't start**
+- Clear the cache: `npm start -- --clear`
+- Delete `node_modules` and reinstall: `rm -rf node_modules && npm install`
+
+**Android emulator won't connect**
+- Verify ADB is running: `adb devices`
+- Restart ADB server: `adb kill-server && adb start-server`
+
+**iOS simulator issues**
+- Reset simulator: Device > Erase All Content and Settings
+- Rebuild: `rm -rf ios/Pods && cd ios && pod install`
+
+## Next Steps
+
+Once your environment is configured, proceed to [Running the App](/development/running-the-app) to start the development server.

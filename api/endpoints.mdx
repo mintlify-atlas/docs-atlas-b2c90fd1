@@ -1,0 +1,148 @@
+---
+title: 'API Endpoints'
+description: 'Complete reference for BioTea API endpoints and configuration'
+---
+
+## API Configuration
+
+BioTea uses a centralized endpoint configuration defined in `constants/Urls.ts`. The application supports multiple environment configurations pointing to the same production server.
+
+### Environment Endpoints
+
+The `apiEndpoints` object contains three environment configurations:
+
+<ParamField path="prod" type="string">
+  Production API base URL
+  
+  **Value:** `https://simulacion7sb.000webhostapp.com/api`
+</ParamField>
+
+<ParamField path="dev" type="string">
+  Development API base URL (currently points to production)
+  
+  **Value:** `https://simulacion7sb.000webhostapp.com/api`
+</ParamField>
+
+<ParamField path="produccion" type="string">
+  Alternative production base URL (without /api suffix)
+  
+  **Value:** `https://simulacion7sb.000webhostapp.com`
+</ParamField>
+
+<Note>
+  All environments currently point to the same production server. The `dev` and `prod` endpoints include the `/api` path suffix, while `produccion` uses the root domain.
+</Note>
+
+## Authentication Endpoint
+
+### POST /login.php
+
+Authenticates a user and returns user data on successful login.
+
+**Full URL:** `${apiEndpoints.dev}/login.php`
+
+#### Request
+
+<ParamField body="user" type="string" required>
+  The username for authentication
+</ParamField>
+
+<ParamField body="pass" type="string" required>
+  The user's password
+</ParamField>
+
+<CodeGroup>
+```javascript Request Example
+import axios from "axios";
+import { apiEndpoints } from "../constants/Urls";
+
+const requestData = {
+  user: username,
+  pass: password,
+};
+
+const response = await axios.post(
+  `${apiEndpoints.dev}/login.php`,
+  requestData
+);
+```
+
+```json Request Body
+{
+  "user": "john_doe",
+  "pass": "password123"
+}
+```
+</CodeGroup>
+
+#### Response
+
+The API returns a JSON object with the following structure:
+
+<ResponseField name="error" type="boolean" required>
+  Indicates whether the request failed. `false` means success, `true` means failure.
+</ResponseField>
+
+<ResponseField name="data" type="object">
+  User data object returned on successful authentication. This object is stored in secure storage and used throughout the app.
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  Error message returned when `error` is `true`. Provides details about the authentication failure.
+</ResponseField>
+
+<CodeGroup>
+```json Success Response
+{
+  "error": false,
+  "data": {
+    // User object with profile information
+    // Exact structure depends on backend implementation
+  }
+}
+```
+
+```json Error Response
+{
+  "error": true,
+  "message": "Datos incorrectos, por favor revise su información de inicio de sesión"
+}
+```
+</CodeGroup>
+
+#### Response Handling
+
+The login flow checks `response.data.error` to determine success:
+
+- **Success (`error: false`)**: User data is extracted from `response.data.data`
+- **Failure (`error: true`)**: Error message is retrieved from `response.data.message`
+
+<CodeGroup>
+```javascript Success Handling
+if (!response.data.error) {
+  // Login successful
+  setUser(response.data.data);
+  await saveSecureData('user', response.data.data);
+  router.navigate('(tabs)/(home)/inic');
+}
+```
+
+```javascript Error Handling
+if (response.data.error) {
+  Alert.alert(
+    'Inicio de sesión fallido', 
+    response.data.message || "Datos incorrectos, por favor revise su información de inicio de sesión"
+  );
+}
+```
+</CodeGroup>
+
+<Warning>
+  The application performs client-side validation to ensure username and password fields are not empty before making the API request.
+</Warning>
+
+## Implementation Reference
+
+Source files:
+- API configuration: `constants/Urls.ts:1-5`
+- Login implementation: `app/login.tsx:17-51`

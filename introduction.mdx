@@ -1,0 +1,307 @@
+---
+title: Welcome to BioTea documentation
+description: Build powerful mobile experiences with Expo and React Native
+mode: custom
+---
+
+<div className="relative bg-gradient-to-br from-gray-900 via-gray-800 to-black dark:from-[#0f1117] dark:via-[#1a1d27] dark:to-[#0f1117] overflow-hidden">
+  <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0zNiAxOGMzLjMxNCAwIDYgMi42ODYgNiA2cy0yLjY4NiA2LTYgNi02LTIuNjg2LTYtNiAyLjY4Ni02IDYtNnoiIHN0cm9rZT0iIzdiN2I3YiIgc3Ryb2tlLW9wYWNpdHk9Ii4xIi8+PC9nPjwvc3ZnPg==')] opacity-20"></div>
+  
+  <div className="relative max-w-7xl mx-auto px-6 sm:px-8 py-20 sm:py-24">
+    <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+      <div className="lg:col-span-7">
+        <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight">
+          Welcome to BioTea documentation
+        </h1>
+        <p className="text-lg sm:text-xl text-gray-300 dark:text-gray-400 mb-8 max-w-2xl">
+          A modern mobile application built with Expo and React Native featuring secure authentication, seamless navigation, and beautiful themed components.
+        </p>
+        <div className="flex flex-wrap gap-4">
+          <a 
+            href="/quickstart" 
+            className="inline-flex items-center px-6 py-3 rounded-full bg-[#7c7c7c] hover:bg-[#6a6a6a] text-white font-semibold transition-colors duration-200 no-underline"
+          >
+            Get started
+            <svg className="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </a>
+          <a 
+            href="/development/environment" 
+            className="inline-flex items-center px-6 py-3 rounded-full border border-white/30 bg-white/10 hover:bg-white/20 text-white font-semibold transition-colors duration-200 backdrop-blur-sm no-underline"
+          >
+            Developer guide
+          </a>
+        </div>
+      </div>
+      
+      <div className="lg:col-span-5 hidden lg:block">
+        <div className="relative">
+          <div className="absolute inset-0 bg-gradient-to-r from-[#7c7c7c]/20 to-transparent blur-3xl"></div>
+          <img 
+            src="https://media.brand.dev/4a99c600-6aa4-4c07-b0bc-c7a1ee1d9574.png" 
+            alt="BioTea app preview" 
+            noZoom
+            className="relative w-full h-auto max-w-md mx-auto rounded-2xl shadow-2xl"
+          />
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div className="mt-16 mb-16 max-w-5xl mx-auto px-6">
+  <h2 className="text-2xl sm:text-3xl font-semibold text-gray-900 dark:text-white mb-4">
+    Quick start
+  </h2>
+  <p className="text-base text-gray-600 dark:text-gray-400 mb-8">
+    Get your development environment set up and run BioTea in minutes
+  </p>
+  
+  <Steps>
+    <Step title="Install dependencies">
+      Clone the repository and install all required packages using npm.
+      
+      ```bash
+      git clone https://github.com/Erick-Zam/BioTea.git
+      cd BioTea
+      npm install
+      ```
+    </Step>
+    
+    <Step title="Start the development server">
+      Launch the Expo development server to run the app on your device or emulator.
+      
+      ```bash
+      npx expo start
+      ```
+      
+      <Note>
+        You can press `a` for Android, `i` for iOS, or scan the QR code with the Expo Go app on your mobile device.
+      </Note>
+    </Step>
+    
+    <Step title="Configure API endpoint">
+      The app connects to a backend API. Review and update the API endpoints in `constants/Urls.ts` if needed.
+      
+      ```typescript constants/Urls.ts
+      export const apiEndpoints = {
+        prod: 'https://simulacion7sb.000webhostapp.com/api',
+        dev: 'https://simulacion7sb.000webhostapp.com/api',
+        produccion: 'https://simulacion7sb.000webhostapp.com'
+      };
+      ```
+    </Step>
+    
+    <Step title="Test authentication">
+      Navigate to the login screen and test the authentication flow. User credentials are managed through the backend API.
+      
+      <Accordion title="Example login flow">
+        When you submit credentials, the app sends a POST request to `/login.php` and stores the user data securely using Expo SecureStore. The response includes user information like name and email.
+      </Accordion>
+    </Step>
+  </Steps>
+</div>
+
+<div className="mt-16 mb-16 max-w-5xl mx-auto px-6">
+  <h2 className="text-2xl sm:text-3xl font-semibold text-gray-900 dark:text-white mb-4">
+    Explore by topic
+  </h2>
+  <p className="text-base text-gray-600 dark:text-gray-400 mb-8">
+    Dive into specific areas of the BioTea application
+  </p>
+  
+  <CardGroup cols={2}>
+    <Card 
+      title="Authentication" 
+      icon="lock" 
+      href="/features/authentication"
+    >
+      Learn how user authentication works with secure credential storage
+    </Card>
+    <Card 
+      title="Navigation" 
+      icon="compass" 
+      href="/features/navigation"
+    >
+      Understand the tab-based navigation system and routing patterns
+    </Card>
+    <Card 
+      title="Themed components" 
+      icon="palette" 
+      href="/components/themed-components"
+    >
+      Build consistent UIs with light and dark mode support
+    </Card>
+    <Card 
+      title="State management" 
+      icon="database" 
+      href="/context/user-context"
+    >
+      Manage global state with React Context providers
+    </Card>
+  </CardGroup>
+</div>
+
+<div className="mt-16 mb-16 max-w-5xl mx-auto px-6">
+  <h2 className="text-2xl sm:text-3xl font-semibold text-gray-900 dark:text-white mb-4">
+    Key features
+  </h2>
+  <p className="text-base text-gray-600 dark:text-gray-400 mb-8">
+    What makes BioTea powerful for mobile development
+  </p>
+  
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <a href="/features/authentication" className="group block rounded-2xl border border-gray-200 dark:border-[#27272a] hover:border-[#7c7c7c] dark:hover:border-[#7c7c7c] overflow-hidden transition-all duration-200 no-underline bg-white dark:bg-[#1a1d27]">
+      <div className="p-6">
+        <div className="flex items-center gap-3 mb-3">
+          <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-gray-100 dark:bg-[#242838]">
+            <svg className="w-5 h-5 text-[#7c7c7c]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+          </div>
+          <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">Secure authentication</h3>
+        </div>
+        <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+          Built-in login and registration screens with secure credential handling and persistent sessions
+        </p>
+        <div className="flex items-center text-sm font-medium text-gray-600 dark:text-gray-400 group-hover:text-[#7c7c7c] transition-colors">
+          Learn more
+          <svg className="ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </div>
+      </div>
+    </a>
+    
+    <a href="/features/secure-storage" className="group block rounded-2xl border border-gray-200 dark:border-[#27272a] hover:border-[#7c7c7c] dark:hover:border-[#7c7c7c] overflow-hidden transition-all duration-200 no-underline bg-white dark:bg-[#1a1d27]">
+      <div className="p-6">
+        <div className="flex items-center gap-3 mb-3">
+          <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-gray-100 dark:bg-[#242838]">
+            <svg className="w-5 h-5 text-[#7c7c7c]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+            </svg>
+          </div>
+          <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">Secure data storage</h3>
+        </div>
+        <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+          Expo SecureStore integration for encrypted storage of sensitive user data and credentials
+        </p>
+        <div className="flex items-center text-sm font-medium text-gray-600 dark:text-gray-400 group-hover:text-[#7c7c7c] transition-colors">
+          Learn more
+          <svg className="ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </div>
+      </div>
+    </a>
+    
+    <a href="/features/navigation" className="group block rounded-2xl border border-gray-200 dark:border-[#27272a] hover:border-[#7c7c7c] dark:hover:border-[#7c7c7c] overflow-hidden transition-all duration-200 no-underline bg-white dark:bg-[#1a1d27]">
+      <div className="p-6">
+        <div className="flex items-center gap-3 mb-3">
+          <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-gray-100 dark:bg-[#242838]">
+            <svg className="w-5 h-5 text-[#7c7c7c]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+            </svg>
+          </div>
+          <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">Tab navigation</h3>
+        </div>
+        <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+          File-based routing with expo-router and intuitive tab navigation between Home and Settings
+        </p>
+        <div className="flex items-center text-sm font-medium text-gray-600 dark:text-gray-400 group-hover:text-[#7c7c7c] transition-colors">
+          Learn more
+          <svg className="ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </div>
+      </div>
+    </a>
+    
+    <a href="/components/themed-components" className="group block rounded-2xl border border-gray-200 dark:border-[#27272a] hover:border-[#7c7c7c] dark:hover:border-[#7c7c7c] overflow-hidden transition-all duration-200 no-underline bg-white dark:bg-[#1a1d27]">
+      <div className="p-6">
+        <div className="flex items-center gap-3 mb-3">
+          <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-gray-100 dark:bg-[#242838]">
+            <svg className="w-5 h-5 text-[#7c7c7c]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+            </svg>
+          </div>
+          <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">Themed components</h3>
+        </div>
+        <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+          Pre-built components with automatic light and dark mode support for consistent UI design
+        </p>
+        <div className="flex items-center text-sm font-medium text-gray-600 dark:text-gray-400 group-hover:text-[#7c7c7c] transition-colors">
+          Learn more
+          <svg className="ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </div>
+      </div>
+    </a>
+  </div>
+</div>
+
+<div className="mt-16 mb-16 max-w-5xl mx-auto px-6">
+  <h2 className="text-2xl sm:text-3xl font-semibold text-gray-900 dark:text-white mb-4">
+    Architecture overview
+  </h2>
+  <p className="text-base text-gray-600 dark:text-gray-400 mb-8">
+    Understand how BioTea is structured
+  </p>
+  
+  <CardGroup cols={3}>
+    <Card 
+      title="File structure" 
+      icon="folder-tree" 
+      href="/architecture/file-structure"
+    >
+      Explore the project organization and folder layout
+    </Card>
+    <Card 
+      title="Routing system" 
+      icon="route" 
+      href="/architecture/routing"
+    >
+      Learn about expo-router file-based routing
+    </Card>
+    <Card 
+      title="API integration" 
+      icon="plug" 
+      href="/api/endpoints"
+    >
+      Discover how the app communicates with the backend
+    </Card>
+  </CardGroup>
+</div>
+
+<div className="mt-20 mb-16 max-w-5xl mx-auto px-6">
+  <div className="rounded-2xl border border-gray-200 dark:border-[#27272a] bg-gradient-to-br from-gray-50 to-white dark:from-[#1a1d27] dark:to-[#242838] p-8 sm:p-12">
+    <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-4">
+      Ready to build with BioTea?
+    </h2>
+    <p className="text-base text-gray-600 dark:text-gray-400 mb-6 max-w-2xl">
+      Start developing your mobile app with our comprehensive documentation and example code.
+    </p>
+    <div className="flex flex-wrap gap-4">
+      <a 
+        href="/quickstart" 
+        className="inline-flex items-center px-6 py-3 rounded-full bg-[#7c7c7c] hover:bg-[#6a6a6a] text-white font-semibold transition-colors duration-200 no-underline"
+      >
+        Get started now
+        <svg className="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+        </svg>
+      </a>
+      <a 
+        href="https://github.com/Erick-Zam/BioTea" 
+        className="inline-flex items-center px-6 py-3 rounded-full border border-gray-300 dark:border-[#27272a] bg-white dark:bg-[#1a1d27] hover:bg-gray-50 dark:hover:bg-[#242838] text-gray-900 dark:text-gray-100 font-semibold transition-colors duration-200 no-underline"
+      >
+        <svg className="mr-2 w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+          <path fillRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clipRule="evenodd" />
+        </svg>
+        View on GitHub
+      </a>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,414 @@
+---
+title: 'Installation'
+description: 'Complete installation guide for setting up the BioTea mobile application development environment'
+---
+
+## Prerequisites
+
+Before installing BioTea, ensure you have the following prerequisites installed on your system.
+
+### Required Software
+
+<Steps>
+  <Step title="Node.js">
+    Install Node.js (LTS version recommended):
+    
+    - Download from [nodejs.org](https://nodejs.org/)
+    - Verify installation:
+    
+    ```bash
+    node --version  # Should be v18 or higher
+    npm --version   # Should be v9 or higher
+    ```
+  </Step>
+
+  <Step title="Git">
+    Install Git for version control:
+    
+    - Download from [git-scm.com](https://git-scm.com/)
+    - Verify installation:
+    
+    ```bash
+    git --version
+    ```
+  </Step>
+
+  <Step title="Expo CLI (Optional)">
+    While not required, installing Expo CLI globally can be helpful:
+    
+    ```bash
+    npm install -g expo-cli
+    ```
+    
+    <Note>
+      Expo CLI is optional because BioTea uses the newer `npx expo` workflow, but having it globally can provide additional development tools.
+    </Note>
+  </Step>
+</Steps>
+
+## Platform-Specific Setup
+
+Choose your target platform(s) for development:
+
+<Tabs>
+  <Tab title="iOS Development">
+    ### macOS Only
+    
+    iOS development requires a Mac computer running macOS.
+    
+    <Steps>
+      <Step title="Install Xcode">
+        Download and install Xcode from the Mac App Store:
+        
+        1. Open the App Store
+        2. Search for "Xcode"
+        3. Click Install (this may take a while, Xcode is large)
+        
+        After installation, open Xcode and accept the license agreement.
+      </Step>
+      
+      <Step title="Install Xcode Command Line Tools">
+        ```bash
+        xcode-select --install
+        ```
+      </Step>
+      
+      <Step title="Install iOS Simulator">
+        Open Xcode, go to **Preferences > Platforms**, and install the iOS Simulator for your target iOS version.
+      </Step>
+      
+      <Step title="Install CocoaPods">
+        CocoaPods is used for managing iOS dependencies:
+        
+        ```bash
+        sudo gem install cocoapods
+        ```
+      </Step>
+    </Steps>
+    
+    <Tip>
+      You can also test on a physical iOS device using Expo Go without needing a paid Apple Developer account.
+    </Tip>
+  </Tab>
+  
+  <Tab title="Android Development">
+    ### Windows, macOS, or Linux
+    
+    <Steps>
+      <Step title="Install Android Studio">
+        Download and install Android Studio from [developer.android.com](https://developer.android.com/studio):
+        
+        1. Download the installer for your OS
+        2. Run the installer and follow the setup wizard
+        3. Choose "Standard" installation type
+        4. Ensure these components are selected:
+           - Android SDK
+           - Android SDK Platform
+           - Android Virtual Device
+      </Step>
+      
+      <Step title="Configure Android SDK">
+        Open Android Studio and navigate to:
+        
+        **Preferences > Appearance & Behavior > System Settings > Android SDK**
+        
+        Install the following:
+        - Android SDK Platform 33 (or latest)
+        - Android SDK Build-Tools
+        - Android Emulator
+        - Android SDK Platform-Tools
+      </Step>
+      
+      <Step title="Set Environment Variables">
+        Add the Android SDK to your PATH:
+        
+        <CodeGroup>
+        ```bash macOS/Linux (~/.bash_profile or ~/.zshrc)
+        export ANDROID_HOME=$HOME/Library/Android/sdk
+        export PATH=$PATH:$ANDROID_HOME/emulator
+        export PATH=$PATH:$ANDROID_HOME/platform-tools
+        ```
+        
+        ```powershell Windows (System Environment Variables)
+        ANDROID_HOME = C:\Users\YourUsername\AppData\Local\Android\Sdk
+        Path += %ANDROID_HOME%\platform-tools
+        Path += %ANDROID_HOME%\emulator
+        ```
+        </CodeGroup>
+        
+        Restart your terminal after making these changes.
+      </Step>
+      
+      <Step title="Create an Android Virtual Device (AVD)">
+        1. Open Android Studio
+        2. Click **Tools > Device Manager**
+        3. Click **Create Device**
+        4. Select a device definition (e.g., Pixel 5)
+        5. Download and select a system image (e.g., API 33)
+        6. Finish the setup
+      </Step>
+    </Steps>
+  </Tab>
+  
+  <Tab title="Physical Device">
+    ### Using Expo Go (Easiest)
+    
+    For the simplest setup, use Expo Go on your physical device:
+    
+    <Steps>
+      <Step title="Install Expo Go">
+        Download Expo Go from your device's app store:
+        
+        - **iOS**: [App Store](https://apps.apple.com/app/expo-go/id982107779)
+        - **Android**: [Google Play Store](https://play.google.com/store/apps/details?id=host.exp.exponent)
+      </Step>
+      
+      <Step title="Connect to Same Network">
+        Ensure your development computer and mobile device are on the same Wi-Fi network.
+      </Step>
+      
+      <Step title="Scan QR Code">
+        When you run `npm start`, scan the QR code with:
+        - **iOS**: Camera app (it will prompt to open in Expo Go)
+        - **Android**: Expo Go app (use the built-in QR scanner)
+      </Step>
+    </Steps>
+    
+    <Note>
+      Expo Go is perfect for development, but for production builds, you'll need to create standalone apps using EAS Build.
+    </Note>
+  </Tab>
+</Tabs>
+
+## Installing BioTea
+
+Once you have the prerequisites installed:
+
+<Steps>
+  <Step title="Clone the Repository">
+    ```bash
+    git clone <repository-url>
+    cd BioTea
+    ```
+  </Step>
+
+  <Step title="Install Dependencies">
+    Install all npm packages defined in `package.json`:
+    
+    ```bash
+    npm install
+    ```
+    
+    This will install:
+    - **Expo SDK ~51.0.8**: Core Expo framework
+    - **React Native 0.74.1**: Cross-platform mobile framework
+    - **expo-router ~3.5.14**: File-based routing system
+    - **expo-secure-store ~13.0.1**: Encrypted key-value storage
+    - **axios ^1.7.2**: HTTP client for API calls
+    - **react-native-paper ^5.12.3**: Material Design UI components
+    - And other dependencies...
+  </Step>
+
+  <Step title="Verify Installation">
+    Check that everything is installed correctly:
+    
+    ```bash
+    npm run lint
+    ```
+    
+    This will verify TypeScript types and code quality.
+  </Step>
+</Steps>
+
+## Configuration
+
+### App Configuration
+
+The app is configured in `app.json`:
+
+```json app.json
+{
+  "expo": {
+    "name": "BioTea",
+    "slug": "BioTea",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "myapp",
+    "plugins": [
+      "expo-router",
+      "expo-secure-store"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
+```
+
+### TypeScript Configuration
+
+BioTea uses strict TypeScript settings in `tsconfig.json`:
+
+```json tsconfig.json
+{
+  "extends": "expo/tsconfig.base",
+  "compilerOptions": {
+    "strict": true,
+    "paths": {
+      "@/*": ["./*"]
+    }
+  }
+}
+```
+
+This enables path aliases, so you can import like:
+
+```typescript
+import { apiEndpoints } from '@/constants/Urls';
+```
+
+### API Configuration
+
+API endpoints are defined in `constants/Urls.ts`:
+
+```typescript constants/Urls.ts
+export const apiEndpoints = {
+    prod: 'https://simulacion7sb.000webhostapp.com/api',
+    dev: 'https://simulacion7sb.000webhostapp.com/api',
+    produccion: 'https://simulacion7sb.000webhostapp.com'
+};
+```
+
+<Warning>
+  Update these URLs to point to your own backend API before deploying to production.
+</Warning>
+
+## Running the App
+
+Start the development server:
+
+```bash
+npm start
+```
+
+Then choose your platform:
+
+<CodeGroup>
+```bash iOS
+npm run ios
+```
+
+```bash Android
+npm run android
+```
+
+```bash Web
+npm run web
+```
+</CodeGroup>
+
+## Troubleshooting
+
+### Common Issues
+
+<AccordionGroup>
+  <Accordion title="Metro bundler port already in use">
+    If you see an error about port 8081 being in use:
+    
+    ```bash
+    # Kill the process using port 8081
+    lsof -ti:8081 | xargs kill -9
+    
+    # Or start on a different port
+    npm start -- --port 8082
+    ```
+  </Accordion>
+  
+  <Accordion title="iOS build fails with CocoaPods error">
+    Try resetting CocoaPods:
+    
+    ```bash
+    cd ios
+    rm -rf Pods Podfile.lock
+    pod install
+    cd ..
+    npm run ios
+    ```
+  </Accordion>
+  
+  <Accordion title="Android emulator not detected">
+    Ensure the emulator is running:
+    
+    ```bash
+    # List available AVDs
+    emulator -list-avds
+    
+    # Start an AVD
+    emulator -avd Pixel_5_API_33
+    ```
+    
+    Then run:
+    ```bash
+    npm run android
+    ```
+  </Accordion>
+  
+  <Accordion title="expo-secure-store not working on web">
+    `expo-secure-store` only works on iOS and Android (not web). For web development, the app will need to fall back to `AsyncStorage` or `localStorage`.
+    
+    <Note>
+      BioTea is designed primarily for mobile platforms. Web support is limited.
+    </Note>
+  </Accordion>
+  
+  <Accordion title="Cannot connect to API">
+    Check the following:
+    
+    1. Verify internet connectivity
+    2. Check that the API endpoint in `constants/Urls.ts` is correct
+    3. Ensure CORS is configured on the backend
+    4. Test the API directly:
+    
+    ```bash
+    curl https://simulacion7sb.000webhostapp.com/api/login.php
+    ```
+  </Accordion>
+  
+  <Accordion title="npm install fails">
+    Try clearing the npm cache:
+    
+    ```bash
+    rm -rf node_modules package-lock.json
+    npm cache clean --force
+    npm install
+    ```
+  </Accordion>
+</AccordionGroup>
+
+### Getting Help
+
+If you encounter issues not covered here:
+
+1. Check the [Expo documentation](https://docs.expo.dev/)
+2. Search [Expo forums](https://forums.expo.dev/)
+3. Check [React Native documentation](https://reactnative.dev/)
+4. Review the project's issue tracker
+
+## Next Steps
+
+Now that you have BioTea installed:
+
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    Quick 5-minute guide to running the app
+  </Card>
+  <Card title="Architecture" icon="diagram-project" href="/architecture/overview">
+    Understand the app structure and navigation
+  </Card>
+  <Card title="Authentication" icon="shield-halved" href="/features/authentication">
+    Learn about the auth flow and secure storage
+  </Card>
+  <Card title="Development" icon="code" href="/development/environment">
+    Start building features
+  </Card>
+</CardGroup>

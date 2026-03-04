@@ -1,0 +1,259 @@
+---
+title: Authentication
+description: Learn how BioTea handles user authentication with secure login flow and credential management
+---
+
+## Overview
+
+BioTea implements a secure authentication system using React Native with Expo Router. The authentication flow integrates with a remote API and securely stores user credentials using Expo's SecureStore.
+
+## Authentication Flow
+
+The login process follows these steps:
+
+1. User enters credentials (username and password)
+2. Credentials are validated locally for empty fields
+3. Request is sent to the authentication API
+4. On success, user data is stored in both UserContext and SecureStore
+5. User is navigated to the home screen
+
+## API Configuration
+
+BioTea uses centralized API endpoint configuration defined in `constants/Urls.ts:1`:
+
+```typescript constants/Urls.ts
+export const apiEndpoints = {
+    prod: 'https://simulacion7sb.000webhostapp.com/api',
+    dev: 'https://simulacion7sb.000webhostapp.com/api',
+    produccion: 'https://simulacion7sb.000webhostapp.com'
+};
+```
+
+<Note>
+Both `prod` and `dev` environments currently point to the same endpoint. Update these values for different staging/production environments.
+</Note>
+
+## Login Implementation
+
+The login screen is implemented in `app/login.tsx:9`. Here's the complete authentication handler:
+
+<CodeGroup>
+```typescript Login Handler
+const handleLogin = async () => {
+    if (username === '' || password === '') {
+        Alert.alert('Campos vacíos', 'Por favor, complete todos los campos.');
+        return;
+    }
+
+    try {
+        const requestData = {
+            user: username,
+            pass: password,
+        };
+
+        const response = await axios.post(
+            `${apiEndpoints.dev}/login.php`,
+            requestData
+        );
+
+        if (!response.data.error) {
+            // Si el inicio de sesión es exitoso, navega a la pantalla de inicio y pasa los datos del usuario
+            setUser(response.data.data);
+            await saveSecureData('user', response.data.data);
+            router.navigate('(tabs)/(home)/inic');
+
+        } else {
+            Alert.alert('Inicio de sesión fallido', response.data.message || "Datos incorrectos, por favor revise su información de inicio de sesión");
+        }
+    } catch (error) {
+        console.log(error);
+        Alert.alert('Error', 'Hubo un error al intentar iniciar sesión. Por favor, inténtelo de nuevo más tarde.');
+    } finally {
+        // Limpiar los campos de entrada después de un intento de inicio de sesión, exitoso o no
+        setUsername('');
+        setPassword('');
+    }
+};
+```
+
+```typescript Complete Login Component
+import React, { useState } from "react";
+import { StyleSheet, Text, View, TextInput, TouchableOpacity, Alert } from 'react-native';
+import { useRouter } from 'expo-router';
+import axios from "axios";
+import { apiEndpoints } from "../constants/Urls";
+import { useUser } from '../components/UserContext';
+import { useSecureStore } from '../components/SecureStoreContext';
+
+export default function Login() {
+    const [username, setUsername] = useState('');
+    const [password, setPassword] = useState('');
+    const router = useRouter();
+
+    const { setUser } = useUser();
+    const { saveSecureData } = useSecureStore();
+
+    // handleLogin function here...
+
+    return (
+        <View style={styles.container}>
+            <Text style={styles.title}>Iniciar Sesión</Text>
+            <TextInput
+                style={styles.input}
+                placeholder="Username"
+                value={username}
+                onChangeText={setUsername}
+                autoCapitalize="none"
+            />
+            <TextInput
+                style={styles.input}
+                placeholder="Password"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry
+            />
+            <TouchableOpacity style={styles.button} onPress={handleLogin}>
+                <Text style={styles.buttonText}>Iniciar Sesión</Text>
+            </TouchableOpacity>
+        </View>
+    );
+}
+```
+</CodeGroup>
+
+## Key Features
+
+<Accordion title="Input Validation">
+The login form validates that both username and password fields are filled before making the API request:
+
+```typescript
+if (username === '' || password === '') {
+    Alert.alert('Campos vacíos', 'Por favor, complete todos los campos.');
+    return;
+}
+```
+</Accordion>
+
+<Accordion title="Secure Password Input">
+The password field uses React Native's `secureTextEntry` prop to hide password characters:
+
+```typescript
+<TextInput
+    style={styles.input}
+    placeholder="Password"
+    value={password}
+    onChangeText={setPassword}
+    secureTextEntry
+/>
+```
+</Accordion>
+
+<Accordion title="Credential Management">
+After successful authentication, user data is stored in two places:
+
+1. **UserContext** - For immediate app-wide access
+2. **SecureStore** - For persistent storage across app sessions
+
+```typescript
+setUser(response.data.data);
+await saveSecureData('user', response.data.data);
+```
+</Accordion>
+
+## API Request Format
+
+The login endpoint expects a POST request with the following structure:
+
+```typescript
+const requestData = {
+    user: username,
+    pass: password,
+};
+
+const response = await axios.post(
+    `${apiEndpoints.dev}/login.php`,
+    requestData
+);
+```
+
+## Response Handling
+
+The API response is expected to have this structure:
+
+```typescript
+{
+    error: boolean,
+    message?: string,
+    data?: {
+        nombres: string,
+        correo: string,
+        // ... other user fields
+    }
+}
+```
+
+<Warning>
+The login handler clears the username and password fields in the `finally` block, ensuring credentials are removed from component state after each login attempt, whether successful or not.
+</Warning>
+
+## Error Handling
+
+BioTea implements comprehensive error handling:
+
+<Tabs>
+  <Tab title="Validation Errors">
+    Empty fields trigger a user-friendly alert before any API call:
+    ```typescript
+    Alert.alert('Campos vacíos', 'Por favor, complete todos los campos.');
+    ```
+  </Tab>
+  <Tab title="API Errors">
+    Failed login attempts show the server's error message:
+    ```typescript
+    Alert.alert('Inicio de sesión fallido', response.data.message || "Datos incorrectos...");
+    ```
+  </Tab>
+  <Tab title="Network Errors">
+    Network or unexpected errors are caught and logged:
+    ```typescript
+    catch (error) {
+        console.log(error);
+        Alert.alert('Error', 'Hubo un error al intentar iniciar sesión...');
+    }
+    ```
+  </Tab>
+</Tabs>
+
+## Navigation After Login
+
+Upon successful authentication, users are automatically navigated to the home screen using Expo Router:
+
+```typescript
+router.navigate('(tabs)/(home)/inic');
+```
+
+See the [Navigation](/features/navigation) documentation for more details on routing structure.
+
+## Required Context Providers
+
+The login component requires both `UserProvider` and `SecureStoreProvider` to be available in the component tree. These are configured in `app/_layout.tsx:6`:
+
+```typescript
+export default function RootLayout() {
+  return (
+    <UserProvider>
+      <SecureStoreProvider>
+        <Stack>
+          {/* screens */}
+        </Stack>
+      </SecureStoreProvider>
+    </UserProvider>
+  );
+}
+```
+
+## Next Steps
+
+- Learn about [User Management](/features/user-management) to understand how user data flows through the app
+- Explore [Secure Storage](/features/secure-storage) to see how credentials are persisted
+- Review [Navigation](/features/navigation) to understand the routing structure

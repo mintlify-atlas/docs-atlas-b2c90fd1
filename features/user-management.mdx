@@ -1,0 +1,290 @@
+---
+title: User Management
+description: How BioTea manages user state and data across the application using React Context
+---
+
+## Overview
+
+BioTea uses React Context API to manage user state globally throughout the application. The `UserContext` provides a centralized way to store and access user data across all screens and components.
+
+## UserContext Implementation
+
+The UserContext is implemented in `components/UserContext.tsx:1` using TypeScript for type safety:
+
+```typescript components/UserContext.tsx
+import React, { createContext, useContext, useState, ReactNode } from "react";
+
+interface UserContextType {
+    user: any;
+    setUser: React.Dispatch<React.SetStateAction<any>>;
+}
+
+const UserContext = createContext<UserContextType | undefined>(undefined);
+
+export function UserProvider({ children }: { children: ReactNode }) {
+    const [user, setUser] = useState<any>(null);
+
+    return (
+        <UserContext.Provider value={{ user, setUser }}>
+            {children}
+        </UserContext.Provider>
+    );
+}
+
+export function useUser() {
+    const context = useContext(UserContext);
+    if (context === undefined) {
+        throw new Error("useUser must be used within a UserProvider");
+    }
+    return context;
+}
+```
+
+## Architecture
+
+<Accordion title="Context Pattern">
+The UserContext follows React's recommended Context pattern:
+
+1. **Context Creation** - Creates a typed context with `UserContextType`
+2. **Provider Component** - Wraps the app and maintains user state
+3. **Custom Hook** - Provides safe access to the context with error handling
+</Accordion>
+
+<Accordion title="Type Safety">
+The context is typed with TypeScript interfaces:
+
+```typescript
+interface UserContextType {
+    user: any;
+    setUser: React.Dispatch<React.SetStateAction<any>>;
+}
+```
+
+<Note>
+The `user` object is currently typed as `any`. Consider creating a specific `User` interface for better type safety based on your API response structure.
+</Note>
+</Accordion>
+
+## Setting Up the Provider
+
+The `UserProvider` must wrap your entire application. In BioTea, this is configured in `app/_layout.tsx:2`:
+
+```typescript app/_layout.tsx
+import { Stack } from "expo-router";
+import { UserProvider } from "../components/UserContext";
+import { SecureStoreProvider } from "../components/SecureStoreContext";
+
+export default function RootLayout() {
+  return (
+    <UserProvider>
+      <SecureStoreProvider>
+        <Stack
+          screenOptions={{
+            headerStyle: {
+              backgroundColor: '#f4511e',
+            },
+            headerTintColor: '#fff',
+            headerTitleStyle: {
+              fontWeight: 'bold',
+            },
+          }}
+        >
+          <Stack.Screen name="index" options={{ title: 'BioTea App' }} />
+          <Stack.Screen name="login" />
+          <Stack.Screen name="register" />
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        </Stack>
+      </SecureStoreProvider>
+    </UserProvider>
+  );
+}
+```
+
+<Warning>
+The `UserProvider` must be at the root level to ensure all screens and components can access user state. Always maintain this hierarchy when modifying the layout.
+</Warning>
+
+## Using the useUser Hook
+
+Access user data in any component using the `useUser` hook:
+
+<CodeGroup>
+```typescript Login Screen (app/login.tsx:14)
+import { useUser } from '../components/UserContext';
+
+export default function Login() {
+    const { setUser } = useUser();
+    
+    const handleLogin = async () => {
+        // ... authentication logic
+        
+        if (!response.data.error) {
+            setUser(response.data.data);
+            await saveSecureData('user', response.data.data);
+            router.navigate('(tabs)/(home)/inic');
+        }
+    };
+}
+```
+
+```typescript Home Screen (app/(tabs)/(home)/inic.tsx:6)
+import { useUser } from '../../../components/UserContext';
+
+export default function Inic() {
+    const { user } = useUser();
+    
+    if (!user) {
+        return (
+            <View style={styles.container}>
+                <Text style={styles.text}>Cargando...</Text>
+            </View>
+        );
+    }
+
+    return (
+        <View style={styles.container}>
+            <Text style={styles.text}>Nombre de usuario: {user.nombres}</Text>
+            <Text style={styles.text}>Correo electrónico: {user.correo}</Text>
+        </View>
+    );
+}
+```
+</CodeGroup>
+
+## User Data Structure
+
+Based on the implementation in `app/(tabs)/(home)/inic.tsx:17`, the user object contains at least:
+
+```typescript
+interface User {
+    nombres: string;    // User's name
+    correo: string;     // Email address
+    // ... additional fields from API
+}
+```
+
+## Common Patterns
+
+<Tabs>
+  <Tab title="Setting User Data">
+    After successful login or data fetch:
+    ```typescript
+    const { setUser } = useUser();
+    
+    // Set user data from API response
+    setUser(response.data.data);
+    ```
+  </Tab>
+  <Tab title="Reading User Data">
+    Access user information in components:
+    ```typescript
+    const { user } = useUser();
+    
+    // Access user properties
+    const userName = user?.nombres;
+    const userEmail = user?.correo;
+    ```
+  </Tab>
+  <Tab title="Loading State">
+    Handle cases where user data isn't loaded yet:
+    ```typescript
+    const { user } = useUser();
+    
+    if (!user) {
+        return <LoadingComponent />;
+    }
+    
+    return <UserContent user={user} />;
+    ```
+  </Tab>
+  <Tab title="Clearing User Data">
+    On logout or session end:
+    ```typescript
+    const { setUser } = useUser();
+    
+    // Clear user data
+    setUser(null);
+    ```
+  </Tab>
+</Tabs>
+
+## Error Handling
+
+The `useUser` hook includes built-in error handling in `components/UserContext.tsx:20`:
+
+```typescript
+export function useUser() {
+    const context = useContext(UserContext);
+    if (context === undefined) {
+        throw new Error("useUser must be used within a UserProvider");
+    }
+    return context;
+}
+```
+
+This ensures that:
+- The hook can only be used within a `UserProvider`
+- Developers get clear error messages if used incorrectly
+- Runtime errors are caught early in development
+
+## Integration with Authentication
+
+The UserContext works in conjunction with authentication and secure storage:
+
+1. **Login** - User data is set in UserContext after successful authentication
+2. **Persistence** - Data is also saved to SecureStore for persistence
+3. **App Launch** - User data can be loaded from SecureStore and restored to UserContext
+
+```typescript
+// On login (app/login.tsx:36)
+setUser(response.data.data);
+await saveSecureData('user', response.data.data);
+
+// On app launch (would be in _layout.tsx or similar)
+const storedUser = await loadSecureData('user');
+if (storedUser) {
+    setUser(storedUser);
+}
+```
+
+## Best Practices
+
+<Note>
+**Recommendations for UserContext usage:**
+
+1. Always check if `user` is `null` before accessing properties
+2. Use optional chaining (`user?.nombres`) to safely access nested properties
+3. Clear user data on logout to prevent stale data
+4. Synchronize UserContext with SecureStore for consistency
+5. Consider creating a typed `User` interface instead of using `any`
+</Note>
+
+## Type Safety Improvements
+
+For better type safety, consider defining a specific User interface:
+
+```typescript
+interface User {
+    nombres: string;
+    correo: string;
+    // Add other fields from your API
+}
+
+interface UserContextType {
+    user: User | null;
+    setUser: React.Dispatch<React.SetStateAction<User | null>>;
+}
+
+const UserContext = createContext<UserContextType | undefined>(undefined);
+
+export function UserProvider({ children }: { children: ReactNode }) {
+    const [user, setUser] = useState<User | null>(null);
+    // ...
+}
+```
+
+## Related Topics
+
+- [Authentication](/features/authentication) - How user data is obtained during login
+- [Secure Storage](/features/secure-storage) - How user data is persisted securely
+- [Navigation](/features/navigation) - How user state affects navigation and route protection

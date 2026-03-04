@@ -1,0 +1,428 @@
+---
+title: Secure Storage
+description: Learn how BioTea securely stores sensitive data using Expo SecureStore with encrypted key-value storage
+---
+
+## Overview
+
+BioTea uses Expo's SecureStore API to securely persist sensitive data like user credentials and authentication tokens. The `SecureStoreContext` provides a React Context wrapper around SecureStore, making it easy to save, load, and delete encrypted data throughout the app.
+
+## Why Secure Storage?
+
+SecureStore provides encrypted storage on both iOS and Android:
+
+- **iOS**: Uses the Keychain Services
+- **Android**: Uses SharedPreferences with encryption
+- **Web**: Not supported (use alternative storage)
+
+<Warning>
+Never store sensitive data (passwords, tokens, personal information) in AsyncStorage or plain text. Always use SecureStore for sensitive information.
+</Warning>
+
+## SecureStoreContext Implementation
+
+The complete implementation is in `components/SecureStoreContext.tsx:1`:
+
+```typescript components/SecureStoreContext.tsx
+import React, { createContext, useContext, ReactNode } from "react";
+import * as SecureStore from "expo-secure-store";
+
+interface SecureStoreContextType {
+    saveSecureData: (key: string, value: any) => Promise<void>;
+    loadSecureData: (key: string) => Promise<any>;
+    deleteSecureData: (key: string) => Promise<void>;
+}
+
+const SecureStoreContext = createContext<SecureStoreContextType | undefined>(undefined);
+
+export function SecureStoreProvider({ children }: { children: ReactNode }) {
+    const saveSecureData = async (key: string, value: any) => {
+        await SecureStore.setItemAsync(key, JSON.stringify(value));
+    };
+
+    const loadSecureData = async (key: string) => {
+        const data = await SecureStore.getItemAsync(key);
+        return data ? JSON.parse(data) : null;
+    };
+
+    const deleteSecureData = async (key: string) => {
+        await SecureStore.deleteItemAsync(key);
+    };
+
+    return (
+        <SecureStoreContext.Provider
+            value={{ saveSecureData, loadSecureData, deleteSecureData }}
+        >
+            {children}
+        </SecureStoreContext.Provider>
+    );
+}
+
+export function useSecureStore() {
+    const context = useContext(SecureStoreContext);
+    if (context === undefined) {
+        throw new Error("useSecureStore must be used within a SecureStoreProvider");
+    }
+    return context;
+}
+```
+
+## API Methods
+
+### saveSecureData
+
+Saves data to encrypted storage. Automatically serializes objects to JSON.
+
+```typescript
+const saveSecureData = async (key: string, value: any) => {
+    await SecureStore.setItemAsync(key, JSON.stringify(value));
+};
+```
+
+**Parameters:**
+- `key`: Unique identifier for the stored data
+- `value`: Any serializable value (string, number, object, array)
+
+**Example:**
+```typescript
+const { saveSecureData } = useSecureStore();
+
+// Save user object
+await saveSecureData('user', { nombres: 'John', correo: 'john@example.com' });
+
+// Save authentication token
+await saveSecureData('authToken', 'abc123xyz');
+```
+
+### loadSecureData
+
+Retrrieves and deserializes data from encrypted storage.
+
+```typescript
+const loadSecureData = async (key: string) => {
+    const data = await SecureStore.getItemAsync(key);
+    return data ? JSON.parse(data) : null;
+};
+```
+
+**Parameters:**
+- `key`: The identifier for the stored data
+
+**Returns:**
+- The stored value (parsed from JSON)
+- `null` if the key doesn't exist
+
+**Example:**
+```typescript
+const { loadSecureData } = useSecureStore();
+
+// Load user object
+const user = await loadSecureData('user');
+if (user) {
+    console.log('User:', user.nombres);
+}
+
+// Load auth token
+const token = await loadSecureData('authToken');
+```
+
+### deleteSecureData
+
+Removes data from encrypted storage.
+
+```typescript
+const deleteSecureData = async (key: string) => {
+    await SecureStore.deleteItemAsync(key);
+};
+```
+
+**Parameters:**
+- `key`: The identifier for the data to delete
+
+**Example:**
+```typescript
+const { deleteSecureData } = useSecureStore();
+
+// Clear user data on logout
+await deleteSecureData('user');
+await deleteSecureData('authToken');
+```
+
+## Setting Up the Provider
+
+The `SecureStoreProvider` must wrap your app in `app/_layout.tsx:3`:
+
+```typescript app/_layout.tsx
+import { SecureStoreProvider } from "../components/SecureStoreContext";
+import { UserProvider } from "../components/UserContext";
+
+export default function RootLayout() {
+  return (
+    <UserProvider>
+      <SecureStoreProvider>
+        <Stack>
+          {/* Your screens */}
+        </Stack>
+      </SecureStoreProvider>
+    </UserProvider>
+  );
+}
+```
+
+## Usage in Components
+
+Access secure storage methods using the `useSecureStore` hook:
+
+<CodeGroup>
+```typescript Save on Login (app/login.tsx:15)
+import { useSecureStore } from '../components/SecureStoreContext';
+
+export default function Login() {
+    const { saveSecureData } = useSecureStore();
+    
+    const handleLogin = async () => {
+        // ... authentication logic
+        
+        if (!response.data.error) {
+            // Save user data securely
+            await saveSecureData('user', response.data.data);
+            router.navigate('(tabs)/(home)/inic');
+        }
+    };
+}
+```
+
+```typescript Load on App Start
+import { useSecureStore } from '../components/SecureStoreContext';
+import { useUser } from '../components/UserContext';
+import { useEffect } from 'react';
+
+export default function App() {
+    const { loadSecureData } = useSecureStore();
+    const { setUser } = useUser();
+    
+    useEffect(() => {
+        // Restore user session on app launch
+        const restoreUser = async () => {
+            const storedUser = await loadSecureData('user');
+            if (storedUser) {
+                setUser(storedUser);
+            }
+        };
+        
+        restoreUser();
+    }, []);
+}
+```
+
+```typescript Clear on Logout
+import { useSecureStore } from '../components/SecureStoreContext';
+import { useUser } from '../components/UserContext';
+
+export default function Settings() {
+    const { deleteSecureData } = useSecureStore();
+    const { setUser } = useUser();
+    
+    const handleLogout = async () => {
+        // Clear user from context
+        setUser(null);
+        
+        // Clear secure storage
+        await deleteSecureData('user');
+        await deleteSecureData('authToken');
+        
+        router.navigate('/login');
+    };
+}
+```
+</CodeGroup>
+
+## Common Use Cases
+
+<Tabs>
+  <Tab title="User Credentials">
+    Store authenticated user data after login:
+    ```typescript
+    const { saveSecureData } = useSecureStore();
+    
+    // After successful authentication
+    await saveSecureData('user', {
+        nombres: 'John Doe',
+        correo: 'john@example.com',
+        userId: '12345'
+    });
+    ```
+  </Tab>
+  <Tab title="Authentication Tokens">
+    Store API tokens and refresh tokens:
+    ```typescript
+    await saveSecureData('accessToken', response.data.accessToken);
+    await saveSecureData('refreshToken', response.data.refreshToken);
+    
+    // Later, retrieve for API calls
+    const token = await loadSecureData('accessToken');
+    axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    ```
+  </Tab>
+  <Tab title="Session Persistence">
+    Restore user session on app restart:
+    ```typescript
+    useEffect(() => {
+        const initSession = async () => {
+            const user = await loadSecureData('user');
+            const token = await loadSecureData('accessToken');
+            
+            if (user && token) {
+                setUser(user);
+                // User is authenticated, navigate to home
+                router.replace('(tabs)/(home)/inic');
+            } else {
+                // No session, go to login
+                router.replace('/login');
+            }
+        };
+        
+        initSession();
+    }, []);
+    ```
+  </Tab>
+  <Tab title="Secure Settings">
+    Store sensitive app preferences:
+    ```typescript
+    // Save secure preferences
+    await saveSecureData('biometricEnabled', true);
+    await saveSecureData('apiKey', 'secret-api-key');
+    
+    // Load preferences
+    const biometricEnabled = await loadSecureData('biometricEnabled');
+    ```
+  </Tab>
+</Tabs>
+
+## JSON Serialization
+
+SecureStore only accepts string values, so the context automatically handles JSON serialization:
+
+<Accordion title="How Serialization Works">
+**Saving:**
+```typescript
+// You pass any object
+await saveSecureData('user', { nombres: 'John', correo: 'john@example.com' });
+
+// Internally converted to JSON string
+await SecureStore.setItemAsync(key, JSON.stringify(value));
+```
+
+**Loading:**
+```typescript
+// Raw string retrieved from storage
+const data = await SecureStore.getItemAsync(key);
+
+// Automatically parsed back to object
+return data ? JSON.parse(data) : null;
+```
+</Accordion>
+
+<Note>
+Make sure the data you store is JSON-serializable. Functions, symbols, and circular references cannot be stored.
+</Note>
+
+## Error Handling
+
+The `useSecureStore` hook includes error boundary checking:
+
+```typescript
+export function useSecureStore() {
+    const context = useContext(SecureStoreContext);
+    if (context === undefined) {
+        throw new Error("useSecureStore must be used within a SecureStoreProvider");
+    }
+    return context;
+}
+```
+
+For production apps, consider adding try-catch blocks:
+
+```typescript
+const handleSaveUser = async (userData: User) => {
+    try {
+        await saveSecureData('user', userData);
+    } catch (error) {
+        console.error('Failed to save user data:', error);
+        Alert.alert('Error', 'Could not save user data securely');
+    }
+};
+```
+
+## Storage Limits
+
+<Warning>
+**SecureStore Limitations:**
+
+- Maximum value size: 2048 bytes on iOS
+- Keys must be alphanumeric (can include `.`, `-`, and `_`)
+- Total storage depends on device keychain limits
+- Not available on web platform
+
+For larger data, consider encrypting and using AsyncStorage or a local database.
+</Warning>
+
+## Best Practices
+
+1. **Use Descriptive Keys**: Use clear, consistent key names (`'user'`, `'authToken'`, not `'u'`, `'t'`)
+
+2. **Clean Up on Logout**: Always delete secure data when users log out
+   ```typescript
+   await deleteSecureData('user');
+   await deleteSecureData('authToken');
+   ```
+
+3. **Sync with Context**: Keep SecureStore in sync with UserContext
+   ```typescript
+   // Update both
+   setUser(userData);
+   await saveSecureData('user', userData);
+   ```
+
+4. **Handle Null Cases**: Always check if loaded data exists
+   ```typescript
+   const user = await loadSecureData('user');
+   if (user) {
+       // Use user data
+   }
+   ```
+
+5. **Validate Loaded Data**: Ensure loaded data is still valid
+   ```typescript
+   const token = await loadSecureData('authToken');
+   if (token && isTokenValid(token)) {
+       // Use token
+   } else {
+       await deleteSecureData('authToken');
+   }
+   ```
+
+## Integration with Authentication
+
+SecureStore works seamlessly with BioTea's authentication system. From `app/login.tsx:37`:
+
+```typescript
+if (!response.data.error) {
+    // Store in memory (UserContext)
+    setUser(response.data.data);
+    
+    // Persist to secure storage
+    await saveSecureData('user', response.data.data);
+    
+    // Navigate to home
+    router.navigate('(tabs)/(home)/inic');
+}
+```
+
+This ensures user data persists across app restarts while remaining encrypted.
+
+## Related Topics
+
+- [Authentication](/features/authentication) - How secure storage integrates with login
+- [User Management](/features/user-management) - Managing user state in memory
+- [Expo SecureStore Docs](https://docs.expo.dev/versions/latest/sdk/securestore/) - Official Expo documentation
